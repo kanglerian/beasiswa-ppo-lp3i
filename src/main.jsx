@@ -9,6 +9,9 @@ import './index.css'
 import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard';
+import Pribadi from './pages/Pribadi';
+import Prodi from './pages/Prodi';
+import Orangtua from './pages/Orangtua';
 
 const router = createBrowserRouter([
   {
@@ -20,6 +23,15 @@ const router = createBrowserRouter([
   },{
     path: "/dashboard",
     element: <Dashboard/>,
+  },{
+    path: "/pribadi",
+    element: <Pribadi/>,
+  },{
+    path: "/orangtua",
+    element: <Orangtua/>,
+  },{
+    path: "/programstudi",
+    element: <Prodi/>,
   },
 ]);
 

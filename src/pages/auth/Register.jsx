@@ -20,6 +20,7 @@ const Register = () => {
   const [emailMessage, setEmailMessage] = useState(false);
 
   const [name, setName] = useState("");
+  const [information, setInformation] = useState("6281313608558");
 
   const checkValidation = async (e, field) => {
     e.preventDefault();
@@ -35,6 +36,7 @@ const Register = () => {
         field: field
       })
         .then((response) => {
+          console.log(response);
           if (response.status == 200) {
             if (field == 'phone') {
               setWhatsappMessage(true);
@@ -46,13 +48,14 @@ const Register = () => {
             } else if (field == 'email') {
               setEmailMessage(true);
               setEmailValidate(true);
-              setEmailDisabled(true);
+              if (response.data.create) {
+                setEmailDisabled(true);
+              }
             }
           }
         })
         .catch((error) => {
           const responseError = error.response;
-          console.log(responseError);
           if (responseError.status == 404 && responseError.data.create) {
             if (field == 'phone') {
               setWhatsappMessage(true);
@@ -78,13 +81,14 @@ const Register = () => {
   }
 
   const registerHandle = async () => {
-    if (whatsapp !== '' && email !== '' && name !== '') {
+    if (whatsapp !== '' && email !== '' && name !== '' && information !== '') {
       const confirmed = confirm(`Berikut data yang akan didaftarkan\n------\nNama lengkap: ${name}\nEmail: ${email}\nNo. Whatsapp: ${whatsapp}\n------\nApakah sudah benar?`)
       if (confirmed) {
         await axios.post('http://localhost:8000/api/auth/beasiswappo/register', {
           phone: whatsapp,
           email: email,
           name: name,
+          information: information
         })
           .then((response) => {
             localStorage.setItem('LP3IPPO:token', response.data.access_token)
@@ -111,18 +115,16 @@ const Register = () => {
         if (!response.forbidden) {
           navigate('/dashboard');
         }
-        console.log(response.message);
       })
       .catch((error) => {
         if (!error.forbidden) {
           navigate('/login');
         }
-        console.log(error.message);
       })
   }, []);
 
   return (
-    <div className='flex items-center justify-center bg-lp3i-300 h-screen'>
+    <div className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 h-screen p-5'>
       <div className='max-w-lg w-full bg-white p-10 rounded-3xl shadow-xl space-y-6'>
         <div className="space-y-4">
           <form onSubmit={(e) => checkValidation(e, 'phone')} method='POST' className='space-y-4'>
@@ -161,7 +163,15 @@ const Register = () => {
           </form>
           {
             emailShow &&
-            <form onSubmit={(e) => checkValidation(e, 'email')} method='POST'>
+            <form onSubmit={(e) => checkValidation(e, 'email')} method='POST' className='space-y-4'>
+              <div>
+                <label htmlFor="information" className="block mb-2 text-sm font-medium text-gray-900">Sumber Informasi</label>
+                <select id="information" defaultValue={information} onChange={(e) => setInformation(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                  <option disabled>Pilih</option>
+                  <option value="6281313608558">Website</option>
+                  <option value="6282215614238">Nurul Ahyar, S.Sos</option>
+                </select>
+              </div>
               <div>
                 <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900">
                   Email
@@ -178,7 +188,7 @@ const Register = () => {
                 {
                   emailMessage ? (
                     emailValidate &&
-                    <p className="mt-2 text-xs text-red-500"><span className="font-medium">Email</span> sudah digunakan!</p>
+                    <p className="mt-2 text-xs text-red-500"><span className="font-medium">Email</span> sudah digunakan! silahkan masukan email lainnya.</p>
                   ) : null
                 }
               </div>
