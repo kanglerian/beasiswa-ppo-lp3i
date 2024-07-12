@@ -14,7 +14,7 @@ const Login = () => {
   const loginHandle = async (e) => {
     e.preventDefault();
     if (email !== '' && password !== '') {
-      await axios.post('http://localhost:8000/api/auth/beasiswappo/login', {
+      await axios.post('http://localhost:8000/api/beasiswappo/login', {
         email: email,
         password: password,
       })

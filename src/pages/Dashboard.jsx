@@ -12,23 +12,26 @@ const Dashboard = () => {
   const [user, setUser] = useState({
     name: 'Loading...'
   });
-  const [applicant, setApplicant] = useState({});
-  const [father, setFather] = useState({});
-  const [mother, setMother] = useState({});
-  const [files, setFiles] = useState([]);
+
+  const [userUploadFinish, setUserUploadFinish] = useState(false);
 
   const getInfo = async () => {
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:8000/api/auth/beasiswappo/profile', {
+    await axios.get('http://localhost:8000/api/beasiswappo/profile', {
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
       .then((response) => {
-        setApplicant(response.data.applicant);
-        setFather(response.data.father);
-        setMother(response.data.mother);
-        setFiles(response.data.files);
+        const userupload = response.data.userupload;
+        let foto = userupload.find((file) => { return file.fileupload.namefile == "foto" });
+        let aktaKelahiran = userupload.find((file) => { return file.fileupload.namefile == "akta-kelahiran" });
+        let sertifikatPendukung = userupload.find((file) => { return file.fileupload.namefile == "sertifikat-pendukung" });
+        let fotoRumah = userupload.find((file) => { return file.fileupload.namefile == "foto-rumah" });
+        let buktiTarifDaya = userupload.find((file) => { return file.fileupload.namefile == "bukti-tarif-daya" });
+        if(foto && aktaKelahiran && sertifikatPendukung && fotoRumah && buktiTarifDaya){
+          setUserUploadFinish(true);
+        }
       })
       .catch((error) => {
         if(error.response.status == 401){
@@ -40,7 +43,7 @@ const Dashboard = () => {
 
   const logoutHandle = async () => {
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:8000/api/auth/beasiswappo/logout', {
+    await axios.get('http://localhost:8000/api/beasiswappo/logout', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -103,13 +106,19 @@ const Dashboard = () => {
               <FontAwesomeIcon icon={faXmarkCircle} size='sm' className='text-red-500' />
             </p>
           </Link>
-          <div className='flex flex-col items-center gap-2 shadow-xl bg-gray-50 hover:bg-lp3i-400 text-gray-800 hover:text-white border-4 hover:border-lp3i-200 px-5 py-4 cursor-pointer transition-all rounded-2xl'>
+          <Link to={`/berkas`} className='flex flex-col items-center gap-2 shadow-xl bg-gray-50 hover:bg-lp3i-400 text-gray-800 hover:text-white border-4 hover:border-lp3i-200 px-5 py-4 cursor-pointer transition-all rounded-2xl'>
             <FontAwesomeIcon icon={faFilePdf} size='lg' />
             <p className='space-x-2'>
               <span className='text-sm'>Unggah Berkas</span>
-              <FontAwesomeIcon icon={faXmarkCircle} size='sm' className='text-red-500' />
+              {
+                userUploadFinish ? (
+                  <FontAwesomeIcon icon={faCheckCircle} size='sm' className='text-emerald-500' />
+                ):(
+                  <FontAwesomeIcon icon={faXmarkCircle} size='sm' className='text-red-500' />
+                )
+              }
             </p>
-          </div>
+          </Link>
         </section>
         <section>
           <button type="button" onClick={logoutHandle} className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-xl text-sm px-5 py-2.5 space-x-2">

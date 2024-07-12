@@ -67,7 +67,7 @@ const Pribadi = () => {
 
   const getInfo = async () => {
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:8000/api/auth/beasiswappo/profile', {
+    await axios.get('http://localhost:8000/api/beasiswappo/profile', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -150,7 +150,7 @@ const Pribadi = () => {
 
   const saveHandle = async (e) => {
     e.preventDefault();
-    await axios.patch(`http://localhost:8000/api/auth/beasiswappo/applicant/update/${user.identity}`, formData)
+    await axios.patch(`http://localhost:8000/api/beasiswappo/applicant/update/${user.identity}`, formData)
       .then((response) => {
         alert(response.data.message);
       })

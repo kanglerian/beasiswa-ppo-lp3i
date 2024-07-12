@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import Pribadi from './pages/Pribadi';
 import Prodi from './pages/Prodi';
 import Orangtua from './pages/Orangtua';
+import Berkas from './pages/Berkas';
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,9 @@ const router = createBrowserRouter([
   },{
     path: "/programstudi",
     element: <Prodi/>,
+  },{
+    path: "/berkas",
+    element: <Berkas/>,
   },
 ]);
 

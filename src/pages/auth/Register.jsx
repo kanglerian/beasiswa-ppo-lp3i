@@ -84,7 +84,7 @@ const Register = () => {
     if (whatsapp !== '' && email !== '' && name !== '' && information !== '') {
       const confirmed = confirm(`Berikut data yang akan didaftarkan\n------\nNama lengkap: ${name}\nEmail: ${email}\nNo. Whatsapp: ${whatsapp}\n------\nApakah sudah benar?`)
       if (confirmed) {
-        await axios.post('http://localhost:8000/api/auth/beasiswappo/register', {
+        await axios.post('http://localhost:8000/api/beasiswappo/register', {
           phone: whatsapp,
           email: email,
           name: name,
