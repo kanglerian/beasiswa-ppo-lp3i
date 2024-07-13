@@ -31,7 +31,7 @@ const Prodi = () => {
   const getInfo = async () => {
     const token = localStorage.getItem('LP3IPPO:token');
     setLoading(true);
-    await axios.get('http://localhost:8000/api/beasiswappo/profile', {
+    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -70,7 +70,7 @@ const Prodi = () => {
       programSecond: [],
     });
     try {
-      await axios.patch(`http://localhost:8000/api/beasiswappo/applicant/update-prodi/${user.identity}`, formData);
+      await axios.patch(`https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/applicant/update-prodi/${user.identity}`, formData);
       getInfo();
       setTimeout(() => {
         setLoading(false);

@@ -94,7 +94,7 @@ const Orangtua = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:8000/api/beasiswappo/profile', {
+    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -175,7 +175,7 @@ const Orangtua = () => {
       motherPostalCode: [],
     });
     try {
-      await axios.patch(`http://localhost:8000/api/beasiswappo/applicant/update-family/${user.identity}`, formData)
+      await axios.patch(`https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/applicant/update-family/${user.identity}`, formData)
       getInfo();
       setTimeout(() => {
         setLoading(false);

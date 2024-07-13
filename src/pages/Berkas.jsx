@@ -22,7 +22,7 @@ const Berkas = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:8000/api/beasiswappo/profile', {
+    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -66,7 +66,7 @@ const Berkas = () => {
         const token = localStorage.getItem('LP3IPPO:token');
         await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmbonline/upload`, data)
           .then(async (res) => {
-            await axios.post(`http://localhost:8000/api/beasiswappo/userupload`, status, {
+            await axios.post(`https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/userupload`, status, {
               headers: { Authorization: `Bearer ${token}` }
             }
             ).then((res) => {
@@ -113,7 +113,7 @@ const Berkas = () => {
         .then(async (res) => {
           await axios
             .delete(
-              `http://localhost:8000/api/beasiswappo/userupload/${user.id}`, {
+              `https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/userupload/${user.id}`, {
               headers: {
                 Authorization: `Bearer ${token}`
               }

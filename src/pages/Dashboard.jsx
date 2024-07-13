@@ -28,7 +28,7 @@ const Dashboard = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:8000/api/beasiswappo/profile', {
+    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -57,7 +57,7 @@ const Dashboard = () => {
     const confirmed = confirm('Apakah anda yakin akan keluar?');
     if (confirmed) {
       const token = localStorage.getItem('LP3IPPO:token');
-      await axios.get('http://localhost:8000/api/beasiswappo/logout', {
+      await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/logout', {
         headers: {
           Authorization: `Bearer ${token}`
         }

@@ -19,7 +19,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     if (email !== '' && password !== '') {
-      await axios.post('http://localhost:8000/api/beasiswappo/login', {
+      await axios.post('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/login', {
         email: email,
         password: password,
       })

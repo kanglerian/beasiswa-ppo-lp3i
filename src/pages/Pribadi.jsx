@@ -74,7 +74,7 @@ const Pribadi = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:8000/api/beasiswappo/profile', {
+    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -120,7 +120,7 @@ const Pribadi = () => {
 
   const getSchools = async () => {
     await axios
-      .get(`http://localhost:8000/api/school/getall`)
+      .get(`https://database.politekniklp3i-tasikmalaya.ac.id/api/school/getall`)
       .then((res) => {
         let bucket = [];
         let dataSchools = res.data.schools;
@@ -182,7 +182,7 @@ const Pribadi = () => {
       postalCode: [],
     });
     try {
-      await axios.patch(`http://localhost:8000/api/beasiswappo/applicant/update/${user.identity}`, formData)
+      await axios.patch(`https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/applicant/update/${user.identity}`, formData)
       getInfo();
       setTimeout(() => {
         setLoading(false);

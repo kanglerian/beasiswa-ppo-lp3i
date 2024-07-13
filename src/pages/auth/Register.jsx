@@ -55,7 +55,7 @@ const Register = () => {
       } else if (field == 'email') {
         value = email;
       }
-      await axios.post('http://localhost:8000/api/beasiswa-ppo/check', {
+      await axios.post('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswa-ppo/check', {
         value: value,
         field: field
       })
@@ -110,7 +110,7 @@ const Register = () => {
     if (whatsapp !== '' && email !== '' && name !== '' && information !== '') {
       const confirmed = confirm(`Berikut data yang akan didaftarkan\n------\nNama lengkap: ${name}\nEmail: ${email}\nNo. Whatsapp: ${whatsapp}\n------\nApakah sudah benar?`)
       if (confirmed) {
-        await axios.post('http://localhost:8000/api/beasiswappo/register', {
+        await axios.post('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/register', {
           phone: whatsapp,
           email: email,
           name: name,
