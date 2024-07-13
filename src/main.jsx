@@ -13,11 +13,12 @@ import Pribadi from './pages/Pribadi';
 import Prodi from './pages/Prodi';
 import Orangtua from './pages/Orangtua';
 import Berkas from './pages/Berkas';
+import Underconstruction from './pages/errors/Underconstruction';
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Register/>,
+    element: <Underconstruction/>,
   },{
     path: "/login",
     element: <Login/>,
