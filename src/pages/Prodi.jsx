@@ -100,6 +100,7 @@ const Prodi = () => {
         setPrograms(results);
       })
       .catch((err) => {
+        console.log(err);
         let networkError = err.message == "Network Error";
         if (networkError) {
           alert("Mohon maaf, data sekolah tidak bisa muncul. Periksa server.");
