@@ -7,12 +7,16 @@ import { faArrowLeft, faCircleDot, faEdit, faSave } from '@fortawesome/free-soli
 import { getProvinces, getRegencies, getDistricts, getVillages } from '../utilities/StudentAddress.js'
 import axios from 'axios';
 import LogoLP3IPutih from '../assets/logo-lp3i-putih.svg'
+import ServerError from '../pages/errors/ServerError'
 
 const Orangtua = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState({
     name: 'Loading...'
   });
+
+  const [errorPage, setErrorPage] = useState(false);
+  
   const [editFatherAddress, setEditFatherAddress] = useState(false);
   const [editMotherAddress, setEditMotherAddress] = useState(false);
 
@@ -94,6 +98,8 @@ const Orangtua = () => {
       }
     })
       .then((response) => {
+        setEditFatherAddress(false);
+        setEditMotherAddress(false);
         setFormData({
           // Father
           father_name: response.data.father.name,
@@ -124,6 +130,9 @@ const Orangtua = () => {
           localStorage.removeItem('LP3IPPO:token');
           navigate('/login')
         }
+        if(error.response.status == 500){
+          setErrorPage(true);
+        }
       })
   }
 
@@ -139,6 +148,7 @@ const Orangtua = () => {
     e.preventDefault();
     await axios.patch(`http://localhost:8000/api/beasiswappo/applicant/update-family/${user.identity}`, formData)
       .then((response) => {
+        getInfo();
         alert(response.data.message);
       })
       .catch((error) => {
@@ -214,7 +224,10 @@ const Orangtua = () => {
       })
   }, []);
   return (
-    <main className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 py-10 px-5'>
+    errorPage ? (
+      <ServerError/>
+    ):(
+      <main className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 py-10 px-5'>
       <form onSubmit={saveHandle} className='max-w-8xl w-full mx-auto shadow-xl'>
         <header className='grid grid-cols-1 md:grid-cols-3 items-center gap-5 bg-lp3i-500 px-10 py-6 rounded-t-2xl'>
           <Link to={'/dashboard'} className='text-white hover:text-gray-200 text-center md:text-left text-sm space-x-2'>
@@ -775,6 +788,7 @@ const Orangtua = () => {
         </div>
       </form>
     </main>
+    )
   )
 }
 

@@ -4,6 +4,8 @@ import { faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { checkTokenExpiration } from '../../middleware/middleware'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
+import LogoLP3IPutih from '../../assets/logo-lp3i-putih.svg'
+import LogoTagline from '../../assets/tagline-warna.png'
 
 const Register = () => {
   const navigate = useNavigate();
@@ -124,7 +126,11 @@ const Register = () => {
   }, []);
 
   return (
-    <div className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 h-screen p-5'>
+    <div className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 h-screen p-5 space-y-4'>
+      <nav className='flex items-center gap-3 py-3'>
+        <img src={LogoLP3IPutih} alt="" width={180} />
+        <img src={LogoTagline} alt="" width={110} />
+      </nav>
       <div className='max-w-lg w-full bg-white p-10 rounded-3xl shadow-xl space-y-6'>
         <div className="space-y-4">
           <form onSubmit={(e) => checkValidation(e, 'phone')} method='POST' className='space-y-4'>
@@ -155,7 +161,7 @@ const Register = () => {
                   <p className="mt-2 text-xs text-red-500">
                     <span className="font-medium">No. Whatsapp </span>
                     <span>sudah digunakan. Apakah anda </span>
-                    <a href="https://wa.me?phone=6281286501015&text=resetpass" target='_blank' className='underline'>lupa kata sandi?</a>
+                    <a href="https://wa.me?phone=6285183098993&text=resetpass" target='_blank' className='underline'>lupa kata sandi?</a>
                   </p>
                 ) : null
               }

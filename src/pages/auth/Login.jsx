@@ -4,6 +4,8 @@ import { faRightToBracket } from '@fortawesome/free-solid-svg-icons'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
 import { checkTokenExpiration } from '../../middleware/middleware'
+import LogoLP3IPutih from '../../assets/logo-lp3i-putih.svg'
+import LogoTagline from '../../assets/tagline-warna.png'
 
 const Login = () => {
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ const Login = () => {
           navigate('/dashboard');
         })
         .catch((error) => {
-          if(error.response.status == 401){
+          if (error.response.status == 401) {
             alert(error.response.data.message);
           }
         });
@@ -48,7 +50,11 @@ const Login = () => {
   }, []);
 
   return (
-    <div className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 h-screen p-5'>
+    <div className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 h-screen p-5 space-y-4'>
+      <nav className='flex items-center gap-3 py-3'>
+        <img src={LogoLP3IPutih} alt="" width={180} />
+        <img src={LogoTagline} alt="" width={110} />
+      </nav>
       <div className='max-w-lg w-full bg-white p-10 rounded-3xl shadow-xl space-y-6'>
         <form onSubmit={loginHandle} method='POST' className='space-y-6'>
           <div className='space-y-4'>
