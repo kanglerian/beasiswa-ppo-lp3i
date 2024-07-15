@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRightToBracket } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
 import { checkTokenExpiration } from '../../middleware/middleware'
@@ -11,6 +11,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,6 +30,10 @@ const Login = () => {
           navigate('/dashboard');
         })
         .catch((error) => {
+          console.log(error);
+          if (error.response.status == 500) {
+            alert(`Mohon maaf server sedang tidak tersedia, silahkan hubungi Administrator.`);
+          }
           if (error.response.status == 401) {
             alert(error.response.data.message);
           }
@@ -68,15 +73,18 @@ const Login = () => {
                 Email
               </label>
               <div className='flex gap-2'>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-gray-50 border-2 border-lp3i-100 outline-none text-gray-900 text-sm rounded-xl focus:none block w-full px-4 py-2.5" placeholder="Tulis nama lengkap anda..." required />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-gray-50 border-2 border-lp3i-100 outline-none text-gray-900 text-sm rounded-xl focus:none block w-full px-4 py-2.5" placeholder="Email" required />
               </div>
             </div>
             <div>
               <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900">
                 Kata Sandi
               </label>
-              <div className='flex gap-2'>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-gray-50 border-2 border-lp3i-100 outline-none text-gray-900 text-sm rounded-xl focus:none block w-full px-4 py-2.5" placeholder="Tulis nama lengkap anda..." required />
+              <div className='flex relative gap-2'>
+                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-gray-50 border-2 border-lp3i-100 outline-none text-gray-900 text-sm rounded-xl focus:none block w-full px-4 py-2.5" placeholder="Password" required />
+                <button type='button' onClick={() => setShowPassword(!showPassword)} className='absolute text-gray-400 hover:text-gray-500 right-4 top-1/2 transform -translate-y-1/2'>
+                  <FontAwesomeIcon icon={faEye} />
+                </button>
               </div>
             </div>
           </div>

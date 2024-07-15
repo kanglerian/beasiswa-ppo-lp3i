@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import CreatableSelect from 'react-select/creatable'
 import { checkTokenExpiration } from '../middleware/middleware'
 import { Link, useNavigate } from 'react-router-dom'
@@ -29,7 +29,6 @@ const Pribadi = () => {
   const [schoolsAPI, setSchoolsAPI] = useState([]);
 
   const [formData, setFormData] = useState({
-    nik: '',
     name: '',
     gender: '',
     place_of_birth: '',
@@ -53,7 +52,6 @@ const Pribadi = () => {
   });
 
   const [errors, setErrors] = useState({
-    nik: [],
     name: [],
     gender: [],
     placeOfBirth: [],
@@ -82,7 +80,6 @@ const Pribadi = () => {
       .then((response) => {
         setEditAddress(false);
         setFormData({
-          nik: response.data.applicant.nik,
           name: response.data.applicant.name,
           gender: response.data.applicant.gender,
           place_of_birth: response.data.applicant.place_of_birth,
@@ -164,7 +161,6 @@ const Pribadi = () => {
     e.preventDefault();
     setLoading(true);
     setErrors({
-      nik: [],
       name: [],
       gender: [],
       placeOfBirth: [],
@@ -187,10 +183,10 @@ const Pribadi = () => {
       setTimeout(() => {
         setLoading(false);
       }, 2000);
+      navigate('/dashboard');
       alert('Data pribadi berhasil diperbarui!');
     } catch (error) {
       if (error.response.status == 422) {
-        const nikError = error.response.data.message.nik || [];
         const nameError = error.response.data.message.name || [];
         const genderError = error.response.data.message.gender || [];
         const placeOfBirthError = error.response.data.message.place_of_birth || [];
@@ -207,7 +203,6 @@ const Pribadi = () => {
         const rwError = error.response.data.message.rw || [];
         const postalCodeError = error.response.data.message.postal_code || [];
         const newAllErrors = {
-          nik: nikError,
           name: nameError,
           gender: genderError,
           placeOfBirth: placeOfBirthError,
@@ -277,20 +272,6 @@ const Pribadi = () => {
             <div className='bg-white px-8 py-10 rounded-b-2xl'>
               <div className='space-y-5'>
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-5'>
-                  <div>
-                    <label htmlFor="nik" className="block mb-2 text-sm font-medium text-gray-900">Nomor Induk Kependudukan</label>
-                    <input type="number" id="nik" value={formData.nik} name='nik' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Nomor induk kependudukan" required />
-                    <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
-                      {
-                        errors.nik.length > 0 &&
-                        <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
-                          {errors.nik.map((error, index) => (
-                            <li className="font-regular" key={index}>{error}</li>
-                          ))}
-                        </ul>
-                      }
-                    </ul>
-                  </div>
                   <div>
                     <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900">Nama lengkap</label>
                     <input type="text" id="name" value={formData.name} maxLength={150} name='name' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Nama lengkap" required />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { checkTokenExpiration } from '../middleware/middleware'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -75,6 +75,7 @@ const Prodi = () => {
       setTimeout(() => {
         setLoading(false);
       }, 2000);
+      navigate('/dashboard');
       alert('Data program studi berhasil diperbarui!');
     } catch (error) {
       if (error.response.status == 422) {

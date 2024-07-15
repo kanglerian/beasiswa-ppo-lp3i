@@ -18,7 +18,7 @@ import Underconstruction from './pages/errors/Underconstruction';
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Underconstruction/>,
+    element: <Register/>,
   },{
     path: "/login",
     element: <Login/>,

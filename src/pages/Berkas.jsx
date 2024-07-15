@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faCheckCircle, faCircleDot, faDownload, faTrash, } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faCheckCircle, faCircleDot, faTrash, } from '@fortawesome/free-solid-svg-icons'
 import { checkTokenExpiration } from '../middleware/middleware'
 import LogoLP3IPutih from '../assets/logo-lp3i-putih.svg'
 import ServerError from './errors/ServerError'

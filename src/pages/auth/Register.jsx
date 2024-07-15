@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { checkTokenExpiration } from '../../middleware/middleware'
@@ -10,6 +10,8 @@ import LogoTagline from '../../assets/tagline-warna.png'
 const Register = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  const [presenters, setPresenters] = useState([]);
 
   const [whatsapp, setWhatsapp] = useState("");
   const [whatsappDisabled, setWhatsappDisabled] = useState(false);
@@ -139,6 +141,20 @@ const Register = () => {
     }
   }
 
+  const getPresenters = async () => {
+    await axios.get(`https://database.politekniklp3i-tasikmalaya.ac.id/api/presenters`)
+    .then((response) => {
+      setPresenters(response.data)
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
+
+  useEffect(() => {
+    getPresenters();
+  }, []);
+
   useEffect(() => {
     checkTokenExpiration()
       .then((response) => {
@@ -201,7 +217,7 @@ const Register = () => {
                   <p className="mt-2 text-xs text-red-500">
                     <span className="font-medium">No. Whatsapp </span>
                     <span>sudah digunakan. Apakah anda </span>
-                    <a href="https://wa.me?phone=6285183098993&text=resetpass" target='_blank' className='underline'>lupa kata sandi?</a>
+                    <a href="https://wa.me?phone=6285183098993&text=Kirim%20pesan%20perintah%20ini%20untuk%20reset%20password%20:resetpass:" target='_blank' className='underline'>lupa kata sandi?</a>
                   </p>
                 ) : null
               }
@@ -215,7 +231,12 @@ const Register = () => {
                 <select id="information" defaultValue={information} onChange={(e) => setInformation(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
                   <option disabled>Pilih</option>
                   <option value="6281313608558">Website</option>
-                  <option value="6282215614238">Nurul Ahyar, S.Sos</option>
+                  {
+                    presenters.length > 0 &&
+                    presenters.map((presenter, index) =>
+                      <option value={presenter.phone} key={index}>{presenter.name}</option>
+                    )
+                  }
                 </select>
               </div>
               <div>
