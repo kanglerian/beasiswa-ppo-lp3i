@@ -163,7 +163,7 @@ const Dashboard = () => {
             <section className='flex flex-col md:flex-row items-center gap-4'>
               {
                 validate ? (
-                  <a href='https://wa.me?phone=6285183098993&text=Kirim%20pesan%20perintah%20ini%20untuk%20konfirmasi%20pendaftaran%20:confirmregistration:' target='_blank' className="text-white bg-emerald-500 hover:bg-emerald-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-xl text-sm px-5 py-2.5 space-x-2">
+                  <a href='https://wa.me?phone=6282219509698&text=Kirim%20pesan%20perintah%20ini%20untuk%20konfirmasi%20pendaftaran%20:confirmregistration:' target='_blank' className="text-white bg-emerald-500 hover:bg-emerald-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-xl text-sm px-5 py-2.5 space-x-2">
                     <span className='text-sm'>Konfirmasi Pendaftaran</span>
                     <FontAwesomeIcon icon={faWhatsapp} size='sm' />
                   </a>
