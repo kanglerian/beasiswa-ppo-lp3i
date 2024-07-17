@@ -82,6 +82,7 @@ const Register = () => {
         })
         .catch((error) => {
           const responseError = error.response;
+          console.log(responseError);
           if (responseError.status == 404 && responseError.data.create) {
             if (field == 'phone') {
               setWhatsappMessage(true);
@@ -125,7 +126,6 @@ const Register = () => {
             navigate('/dashboard');
           })
           .catch((error) => {
-            console.log(error.response.data.message);
             setLoading(false);
           });
       } else {
