@@ -86,6 +86,10 @@ const Login = () => {
                   <FontAwesomeIcon icon={faEye} />
                 </button>
               </div>
+              <p className="ml-2 mt-2 text-xs text-gray-700">
+                <span>Apakah anda </span>
+                <a href="https://wa.me?phone=6282219509698&text=Kirim%20pesan%20perintah%20ini%20untuk%20reset%20password%20:resetpass:" target='_blank' className='underline font-medium'>lupa kata sandi?</a>
+              </p>
             </div>
           </div>
           <div className='flex items-center gap-3'>

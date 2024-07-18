@@ -125,7 +125,7 @@ const Register = () => {
             alert(response.data.message);
             navigate('/dashboard');
           })
-          .catch((error) => {
+          .catch(() => {
             setLoading(false);
           });
       } else {
