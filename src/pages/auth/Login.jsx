@@ -13,19 +13,19 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("kanglerian@gmail.com");
+  const [password, setPassword] = useState("6281286501015");
 
   const loginHandle = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    // setLoading(true);
     if (email !== '' && password !== '') {
-      await axios.post('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/login', {
+      await axios.post('http://localhost:3000/pmb/auth/login', {
         email: email,
         password: password,
-      })
+      }, { withCredentials: true })
         .then((response) => {
-          localStorage.setItem('LP3IPPO:token', response.data.access_token)
+          localStorage.setItem('LP3IPPO:token', response.data.token)
           alert(response.data.message);
           navigate('/dashboard');
         })

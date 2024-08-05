@@ -24,22 +24,23 @@ const Dashboard = () => {
   const [validateFather, setValidateFather] = useState(false);
   const [validateMother, setValidateMother] = useState(false);
   const [validateProgram, setValidateProgram] = useState(false);
-  const [validateBerkas, setValidateBerkas] = useState(false);
+  const [validateFiles, setValidateFiles] = useState(false);
 
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
+    await axios.get('http://localhost:3000/pmb/profiles/v1', {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: token
+      },
+      withCredentials: true,
     })
       .then((response) => {
         setValidateData(response.data.validate.validate_data);
         setValidateFather(response.data.validate.validate_father);
         setValidateMother(response.data.validate.validate_mother);
         setValidateProgram(response.data.validate.validate_program);
-        setValidateBerkas(response.data.validate.validate_berkas);
+        setValidateFiles(response.data.validate.validate_files);
         setValidate(response.data.validate.validate);
         setLoading(false)
       })
@@ -79,7 +80,7 @@ const Dashboard = () => {
         if (response.forbidden) {
           return navigate('/login');
         }
-        setUser(response.data);
+        setUser(response.data.data);
         getInfo();
       })
       .catch((error) => {
@@ -151,7 +152,7 @@ const Dashboard = () => {
                 <p className='space-x-2'>
                   <span className='text-sm'>Unggah Berkas</span>
                   {
-                    validateBerkas ? (
+                    validateFiles ? (
                       <FontAwesomeIcon icon={faCheckCircle} size='sm' className='text-emerald-500' />
                     ) : (
                       <FontAwesomeIcon icon={faXmarkCircle} size='sm' className='text-red-500' />

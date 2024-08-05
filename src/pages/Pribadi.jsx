@@ -72,10 +72,11 @@ const Pribadi = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
+    await axios.get('http://localhost:3000/pmb/profiles/v1', {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: token
+      },
+      withCredentials: true
     })
       .then((response) => {
         setEditAddress(false);
@@ -105,22 +106,44 @@ const Pribadi = () => {
         setLoading(false);
       })
       .catch((error) => {
-        if (error.response.status == 401) {
-          localStorage.removeItem('LP3IPPO:token');
-          navigate('/login')
-        }
-        if (error.response.status == 500) {
+        if (error.code === 'ERR_NETWORK') {
           setErrorPage(true);
+        } else if (error.code === 'ECONNABORTED') {
+          navigate('/pribadi')
+          setLoading(false);
+        } else if (error.response) {
+          if (error.response.status === 401) {
+            localStorage.removeItem('LP3IPPO:token');
+            navigate('/login');
+          } else if (error.response.status === 403) {
+            navigate('/pribadi')
+            setLoading(false);
+          } else if (error.response.status === 404) {
+            navigate('/pribadi')
+            setLoading(false);
+          } else if (error.response.status === 500) {
+            setErrorPage(true);
+          } else {
+            navigate('/pribadi')
+            setLoading(false);
+          }
+        } else if (error.request) {
+          navigate('/pribadi')
+          setLoading(false);
+        } else {
+          navigate('/pribadi')
+          setLoading(false);
         }
+        setLoading(false);
       })
   }
 
   const getSchools = async () => {
     await axios
-      .get(`https://database.politekniklp3i-tasikmalaya.ac.id/api/school/getall`)
-      .then((res) => {
+      .get(`http://localhost:3000/pmb/schools`)
+      .then((response) => {
         let bucket = [];
-        let dataSchools = res.data.schools;
+        let dataSchools = response.data;
         dataSchools.forEach((data) => {
           bucket.push({
             value: data.id,
@@ -129,12 +152,34 @@ const Pribadi = () => {
         });
         setSchoolsAPI(bucket);
       })
-      .catch((err) => {
-        let networkError = err.message == "Network Error";
-        if (networkError) {
-          alert("Mohon maaf, data sekolah tidak bisa muncul. Periksa server.");
+      .catch((error) => {
+        if (error.code === 'ERR_NETWORK') {
+          setErrorPage(true);
+        } else if (error.code === 'ECONNABORTED') {
+          navigate('/pribadi')
+          setLoading(false);
+        } else if (error.response) {
+          if (error.response.status === 401) {
+            localStorage.removeItem('LP3IPPO:token');
+            navigate('/login');
+          } else if (error.response.status === 403) {
+            navigate('/pribadi')
+            setLoading(false);
+          } else if (error.response.status === 404) {
+            navigate('/pribadi')
+            setLoading(false);
+          } else if (error.response.status === 500) {
+            setErrorPage(true);
+          } else {
+            navigate('/pribadi')
+            setLoading(false);
+          }
+        } else if (error.request) {
+          navigate('/pribadi')
+          setLoading(false);
         } else {
-          console.log(err.message);
+          navigate('/pribadi')
+          setLoading(false);
         }
       });
   };
@@ -177,53 +222,80 @@ const Pribadi = () => {
       rw: [],
       postalCode: [],
     });
-    try {
-      await axios.patch(`https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/applicant/update/${user.identity}`, formData)
-      getInfo();
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-      navigate('/dashboard');
-      alert('Data pribadi berhasil diperbarui!');
-    } catch (error) {
-      if (error.response.status == 422) {
-        const nameError = error.response.data.message.name || [];
-        const genderError = error.response.data.message.gender || [];
-        const placeOfBirthError = error.response.data.message.place_of_birth || [];
-        const dateOfBirthError = error.response.data.message.date_of_birth || [];
-        const religionError = error.response.data.message.religion || [];
-        const schoolError = error.response.data.message.school || [];
-        const majorError = error.response.data.message.major || [];
-        const classError = error.response.data.message.class || [];
-        const yearError = error.response.data.message.year || [];
-        const incomeParentError = error.response.data.message.income_parent || [];
-        const socialMediaError = error.response.data.message.social_media || [];
-        const placeError = error.response.data.message.place || [];
-        const rtError = error.response.data.message.rt || [];
-        const rwError = error.response.data.message.rw || [];
-        const postalCodeError = error.response.data.message.postal_code || [];
-        const newAllErrors = {
-          name: nameError,
-          gender: genderError,
-          placeOfBirth: placeOfBirthError,
-          dateOfBirth: dateOfBirthError,
-          religion: religionError,
-          school: schoolError,
-          major: majorError,
-          class: classError,
-          year: yearError,
-          incomeParent: incomeParentError,
-          socialMedia: socialMediaError,
-          place: placeError,
-          rt: rtError,
-          rw: rwError,
-          postalCode: postalCodeError,
-        };
-        setErrors(newAllErrors);
-        setLoading(false);
-        alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
-      }
-    }
+    const token = localStorage.getItem('LP3IPPO:token');
+    await axios.patch(`http://localhost:3000/pmb/applicants/update/v1/${user.identity}`, formData, {
+      headers: {
+        Authorization: token
+      },
+      withCredentials: true
+    })
+      .then((response) => {
+        getInfo();
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
+        navigate('/dashboard');
+        alert(response.data.message);
+      })
+      .catch((error) => {
+        if (error.code === 'ERR_NETWORK') {
+          setErrorPage(true);
+        } else if (error.code === 'ECONNABORTED') {
+          navigate('/pribadi')
+          setLoading(false);
+        } else if (error.response) {
+          if (error.response.status === 401) {
+            localStorage.removeItem('LP3IPPO:token');
+            navigate('/login');
+          } else if (error.response.status === 403) {
+            navigate('/pribadi')
+            setLoading(false);
+          } else if (error.response.status === 422) {
+            const errorArray = error.response.data.errors || [];
+            const formattedErrors = errorArray.reduce((acc, err) => {
+              if (!acc[err.path]) {
+                acc[err.path] = [];
+              }
+              acc[err.path].push(err.msg);
+              return acc;
+            }, {});
+            const newAllErrors = {
+              name: formattedErrors.name || [],
+              gender: formattedErrors.gender || [],
+              placeOfBirth: formattedErrors.place_of_birth || [],
+              dateOfBirth: formattedErrors.date_of_birth || [],
+              religion: formattedErrors.religion || [],
+              school: formattedErrors.school || [],
+              major: formattedErrors.major || [],
+              class: formattedErrors.class || [],
+              year: formattedErrors.year || [],
+              incomeParent: formattedErrors.income_parent || [],
+              socialMedia: formattedErrors.social_media || [],
+              place: formattedErrors.place || [],
+              rt: formattedErrors.rt || [],
+              rw: formattedErrors.rw || [],
+              postalCode: formattedErrors.postal_code || [],
+            };
+            setErrors(newAllErrors);
+            setLoading(false);
+            alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
+          } else if (error.response.status === 404) {
+            navigate('/pribadi')
+            setLoading(false);
+          } else if (error.response.status === 500) {
+            setErrorPage(true);
+          } else {
+            navigate('/pribadi')
+            setLoading(false);
+          }
+        } else if (error.request) {
+          navigate('/pribadi')
+          setLoading(false);
+        } else {
+          navigate('/pribadi')
+          setLoading(false);
+        }
+      });
   }
 
   useEffect(() => {
@@ -232,7 +304,7 @@ const Pribadi = () => {
         if (response.forbidden) {
           return navigate('/login');
         }
-        setUser(response.data);
+        setUser(response.data.data);
         getInfo();
         getSchools();
         getProvinces()
@@ -274,7 +346,7 @@ const Pribadi = () => {
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-5'>
                   <div>
                     <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900">Nama lengkap</label>
-                    <input type="text" id="name" value={formData.name} maxLength={150} name='name' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Nama lengkap" required />
+                    <input type="text" id="name" value={formData.name} maxLength={150} name='name' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Nama lengkap" />
                     <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                       {
                         errors.name.length > 0 &&
@@ -290,8 +362,8 @@ const Pribadi = () => {
                     <label htmlFor="gender" className="block mb-2 text-sm font-medium text-gray-900">Jenis Kelamin</label>
                     <select id="gender" name='gender' value={formData.gender} onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                       <option value="">Pilih</option>
-                      <option value="1">Laki-laki</option>
-                      <option value="0">Perempuan</option>
+                      <option value="true">Laki-laki</option>
+                      <option value="false">Perempuan</option>
                     </select>
                     <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                       {
@@ -420,10 +492,10 @@ const Pribadi = () => {
                     <label htmlFor="income_parent" className="block mb-2 text-sm font-medium text-gray-900">Penghasilan Orangtua</label>
                     <select id="income_parent" value={formData.income_parent} name='income_parent' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                       <option value="">Pilih</option>
-                      <option value="< 1.000.000">&lt; 1.000.000</option>
-                      <option value="1.000.000 - 2.000.000">1.000.000 - 2.000.000</option>
-                      <option value="2.000.000 - 4.000.000">2.000.000 - 4.000.000</option>
-                      <option value="> 5.000.000">&gt; 5.000.000</option>
+                      <option value="< Rp1.000.000">&lt; Rp1.000.000</option>
+                      <option value="Rp1.000.000 - Rp2.000.000">Rp1.000.000 - Rp2.000.000</option>
+                      <option value="Rp2.000.000 - Rp4.000.000">Rp2.000.000 - Rp4.000.000</option>
+                      <option value="> Rp5.000.000">&gt; Rp5.000.000</option>
                     </select>
                     <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                       {

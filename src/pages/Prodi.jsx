@@ -31,10 +31,11 @@ const Prodi = () => {
   const getInfo = async () => {
     const token = localStorage.getItem('LP3IPPO:token');
     setLoading(true);
-    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
+    await axios.get('http://localhost:3000/pmb/profiles/v1', {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: token
+      },
+      withCredentials: true,
     })
       .then((response) => {
         setFormData({
@@ -44,13 +45,35 @@ const Prodi = () => {
         setLoading(false);
       })
       .catch((error) => {
-        if (error.response.status == 401) {
-          localStorage.removeItem('LP3IPPO:token');
-          navigate('/login')
-        }
-        if (error.response.status == 500) {
+        if (error.code === 'ERR_NETWORK') {
           setErrorPage(true);
+        } else if (error.code === 'ECONNABORTED') {
+          navigate('/programstudi')
+          setLoading(false);
+        } else if (error.response) {
+          if (error.response.status === 401) {
+            localStorage.removeItem('LP3IPPO:token');
+            navigate('/login');
+          } else if (error.response.status === 403) {
+            navigate('/programstudi')
+            setLoading(false);
+          } else if (error.response.status === 404) {
+            navigate('/programstudi')
+            setLoading(false);
+          } else if (error.response.status === 500) {
+            setErrorPage(true);
+          } else {
+            navigate('/programstudi')
+            setLoading(false);
+          }
+        } else if (error.request) {
+          navigate('/programstudi')
+          setLoading(false);
+        } else {
+          navigate('/programstudi')
+          setLoading(false);
         }
+        setLoading(false);
       })
   }
 
@@ -69,27 +92,67 @@ const Prodi = () => {
       program: [],
       programSecond: [],
     });
-    try {
-      await axios.patch(`https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/applicant/update-prodi/${user.identity}`, formData);
-      getInfo();
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-      navigate('/dashboard');
-      alert('Data program studi berhasil diperbarui!');
-    } catch (error) {
-      if (error.response.status == 422) {
-        const programError = error.response.data.message.program || [];
-        const programSecondError = error.response.data.message.program_second || [];
-        const newAllErrors = {
-          program: programError,
-          programSecond: programSecondError,
-        };
-        setErrors(newAllErrors);
-        setLoading(false);
-        alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
-      }
-    }
+    const token = localStorage.getItem('LP3IPPO:token');
+    await axios.patch(`http://localhost:3000/pmb/applicants/updateprodi/v1/${user.identity}`, formData, {
+      headers: {
+        Authorization: token
+      },
+      withCredentials: true
+    })
+      .then((response) => {
+        getInfo();
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
+        navigate('/dashboard');
+        alert(response.data.message);
+      })
+      .catch((error) => {
+        if (error.code === 'ERR_NETWORK') {
+          setErrorPage(true);
+        } else if (error.code === 'ECONNABORTED') {
+          navigate('/programstudi')
+          setLoading(false);
+        } else if (error.response) {
+          if (error.response.status === 401) {
+            localStorage.removeItem('LP3IPPO:token');
+            navigate('/login');
+          } else if (error.response.status === 403) {
+            navigate('/programstudi')
+            setLoading(false);
+          } else if (error.response.status === 422) {
+            const errorArray = error.response.data.errors || [];
+            const formattedErrors = errorArray.reduce((acc, err) => {
+              if (!acc[err.path]) {
+                acc[err.path] = [];
+              }
+              acc[err.path].push(err.msg);
+              return acc;
+            }, {});
+            const newAllErrors = {
+              program: formattedErrors.program || [],
+              programSecond: formattedErrors.program_second || [],
+            };
+            setErrors(newAllErrors);
+            setLoading(false);
+            alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
+          } else if (error.response.status === 404) {
+            navigate('/programstudi')
+            setLoading(false);
+          } else if (error.response.status === 500) {
+            setErrorPage(true);
+          } else {
+            navigate('/programstudi')
+            setLoading(false);
+          }
+        } else if (error.request) {
+          navigate('/programstudi')
+          setLoading(false);
+        } else {
+          navigate('/programstudi')
+          setLoading(false);
+        }
+      });
   }
 
   const getPrograms = async () => {
@@ -97,6 +160,7 @@ const Prodi = () => {
       .get(`https://dashboard.politekniklp3i-tasikmalaya.ac.id/api/programs`)
       .then((res) => {
         let programsData = res.data;
+        console.log(programsData);
         let results = programsData.filter((program) => program.regular == "1" && (program.campus == 'Kampus Tasikmalaya' || program.campus == 'LP3I Tasikmalaya'));
         setPrograms(results);
       })
@@ -116,7 +180,7 @@ const Prodi = () => {
         if (response.forbidden) {
           return navigate('/login');
         }
-        setUser(response.data);
+        setUser(response.data.data);
         getInfo();
         getPrograms();
       })

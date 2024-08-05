@@ -94,10 +94,11 @@ const Orangtua = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
+    await axios.get('http://localhost:3000/pmb/profiles/v1', {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: token
+      },
+      withCredentials: true,
     })
       .then((response) => {
         setEditFatherAddress(false);
