@@ -145,7 +145,6 @@ const Register = () => {
   const getPresenters = async () => {
     await axios.get(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/presenters`)
     .then((response) => {
-      console.log(response.data);
       setPresenters(response.data)
     })
     .catch((error) => {
