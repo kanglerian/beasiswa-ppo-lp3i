@@ -31,7 +31,7 @@ const Prodi = () => {
   const getInfo = async () => {
     const token = localStorage.getItem('LP3IPPO:token');
     setLoading(true);
-    await axios.get('http://localhost:3000/pmb/profiles/v1', {
+    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
       headers: {
         Authorization: token
       },
@@ -93,7 +93,7 @@ const Prodi = () => {
       programSecond: [],
     });
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.patch(`http://localhost:3000/pmb/applicants/updateprodi/v1/${user.identity}`, formData, {
+    await axios.patch(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/applicants/updateprodi/v1/${user.identity}`, formData, {
       headers: {
         Authorization: token
       },
@@ -157,11 +157,10 @@ const Prodi = () => {
 
   const getPrograms = async () => {
     await axios
-      .get(`https://dashboard.politekniklp3i-tasikmalaya.ac.id/api/programs`)
+      .get(`https://api.politekniklp3i-tasikmalaya.ac.id/dashboard/programs`)
       .then((res) => {
-        let programsData = res.data;
-        console.log(programsData);
-        let results = programsData.filter((program) => program.regular == "1" && (program.campus == 'Kampus Tasikmalaya' || program.campus == 'LP3I Tasikmalaya'));
+        const programsData = res.data;
+        const results = programsData.filter((program) => program.type === "R" && (program.campus == 'Kampus Tasikmalaya' || program.campus == 'LP3I Tasikmalaya'));
         setPrograms(results);
       })
       .catch((err) => {
@@ -225,8 +224,8 @@ const Prodi = () => {
                             label={`${program.level} ${program.title} - ${program.campus}`}
                             key={program.uuid}
                           >
-                            {program.interest.length > 0 &&
-                              program.interest.map((inter, index) => (
+                            {program.interests.length > 0 &&
+                              program.interests.map((inter, index) => (
                                 <option
                                   value={`${program.level} ${program.title}`}
                                   key={index}
@@ -258,8 +257,8 @@ const Prodi = () => {
                             label={`${program.level} ${program.title} - ${program.campus}`}
                             key={program.uuid}
                           >
-                            {program.interest.length > 0 &&
-                              program.interest.map((inter, index) => (
+                            {program.interests.length > 0 &&
+                              program.interests.map((inter, index) => (
                                 <option
                                   value={`${program.level} ${program.title}`}
                                   key={index}

@@ -72,7 +72,7 @@ const Pribadi = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:3000/pmb/profiles/v1', {
+    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
       headers: {
         Authorization: token
       },
@@ -140,7 +140,7 @@ const Pribadi = () => {
 
   const getSchools = async () => {
     await axios
-      .get(`http://localhost:3000/pmb/schools`)
+      .get(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/schools`)
       .then((response) => {
         let bucket = [];
         let dataSchools = response.data;
@@ -223,7 +223,7 @@ const Pribadi = () => {
       postalCode: [],
     });
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.patch(`http://localhost:3000/pmb/applicants/update/v1/${user.identity}`, formData, {
+    await axios.patch(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/applicants/update/v1/${user.identity}`, formData, {
       headers: {
         Authorization: token
       },

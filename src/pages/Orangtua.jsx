@@ -94,7 +94,7 @@ const Orangtua = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:3000/pmb/profiles/v1', {
+    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
       headers: {
         Authorization: token
       },
@@ -175,68 +175,87 @@ const Orangtua = () => {
       motherRw: [],
       motherPostalCode: [],
     });
-    try {
-      await axios.patch(`https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/applicant/update-family/${user.identity}`, formData)
-      getInfo();
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-      navigate('/dashboard');
-      alert('Data orang tua berhasil diperbarui!');
-    } catch (error) {
-      if (error.response.status == 422) {
-        // Father
-        const fatherNameError = error.response.data.message.father_name || [];
-        const fatherPhoneError = error.response.data.message.father_phone || [];
-        const fatherJobError = error.response.data.message.father_job || [];
-        const fatherEducationError = error.response.data.message.father_education || [];
-        const fatherPlaceOfBirthError = error.response.data.message.father_place_of_birth || [];
-        const fatherDateOfBirthError = error.response.data.message.father_date_of_birth || [];
-        const fatherPlaceError = error.response.data.message.father_place || [];
-        const fatherRtError = error.response.data.message.father_rt || [];
-        const fatherRwError = error.response.data.message.father_rw || [];
-        const fatherPostalCodeError = error.response.data.message.father_postal_code || [];
-        // Mother
-        const motherNameError = error.response.data.message.mother_name || [];
-        const motherPhoneError = error.response.data.message.mother_phone || [];
-        const motherJobError = error.response.data.message.mother_job || [];
-        const motherEducationError = error.response.data.message.mother_education || [];
-        const motherPlaceOfBirthError = error.response.data.message.mother_place_of_birth || [];
-        const motherDateOfBirthError = error.response.data.message.mother_date_of_birth || [];
-        const motherPlaceError = error.response.data.message.mother_place || [];
-        const motherRtError = error.response.data.message.mother_rt || [];
-        const motherRwError = error.response.data.message.mother_rw || [];
-        const motherPostalCodeError = error.response.data.message.mother_postal_code || [];
 
-        const newAllErrors = {
-          // Father
-          fatherName: fatherNameError,
-          fatherPhone: fatherPhoneError,
-          fatherJob: fatherJobError,
-          fatherEducation: fatherEducationError,
-          fatherPlaceOfBirth: fatherPlaceOfBirthError,
-          fatherDateOfBirth: fatherDateOfBirthError,
-          fatherPlace: fatherPlaceError,
-          fatherRt: fatherRtError,
-          fatherRw: fatherRwError,
-          fatherPostalCode: fatherPostalCodeError,
-          // Mother
-          motherName: motherNameError,
-          motherPhone: motherPhoneError,
-          motherJob: motherJobError,
-          motherEducation: motherEducationError,
-          motherPlaceOfBirth: motherPlaceOfBirthError,
-          motherDateOfBirth: motherDateOfBirthError,
-          motherPlace: motherPlaceError,
-          motherRt: motherRtError,
-          motherRw: motherRwError,
-          motherPostalCode: motherPostalCodeError,
-        };
-        setErrors(newAllErrors);
-        setLoading(false);
-        alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
-      }
-    }
+    const token = localStorage.getItem('LP3IPPO:token');
+    await axios.patch(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/applicants/updatefamily/v1/${user.identity}`, formData, {
+      headers: {
+        Authorization: token
+      },
+      withCredentials: true
+    })
+      .then((response) => {
+        getInfo();
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
+        navigate('/dashboard');
+        alert(response.data.message);
+      })
+      .catch((error) => {
+        if (error.code === 'ERR_NETWORK') {
+          setErrorPage(true);
+        } else if (error.code === 'ECONNABORTED') {
+          navigate('/orangtua')
+          setLoading(false);
+        } else if (error.response) {
+          if (error.response.status === 401) {
+            localStorage.removeItem('LP3IPPO:token');
+            navigate('/login');
+          } else if (error.response.status === 403) {
+            navigate('/orangtua')
+            setLoading(false);
+          } else if (error.response.status === 422) {
+            const errorArray = error.response.data.errors || [];
+            const formattedErrors = errorArray.reduce((acc, err) => {
+              if (!acc[err.path]) {
+                acc[err.path] = [];
+              }
+              acc[err.path].push(err.msg);
+              return acc;
+            }, {});
+            const newAllErrors = {
+              fatherName: formattedErrors.father_name || [],
+              fatherPhone: formattedErrors.father_phone || [],
+              fatherJob: formattedErrors.father_job || [],
+              fatherEducation: formattedErrors.father_date_of_birth || [],
+              fatherPlaceOfBirth: formattedErrors.father_place_of_birth || [],
+              fatherDateOfBirth: formattedErrors.father_date_of_birth || [],
+              fatherPlace: formattedErrors.father_place || [],
+              fatherRt: formattedErrors.father_rt || [],
+              fatherRw: formattedErrors.father_rw || [],
+              fatherPostalCode: formattedErrors.father_postal_code || [],
+              motherName: formattedErrors.mother_name || [],
+              motherPhone: formattedErrors.mother_phone || [],
+              motherJob: formattedErrors.mother_job || [],
+              motherEducation: formattedErrors.mother_date_of_birth || [],
+              motherPlaceOfBirth: formattedErrors.mother_place_of_birth || [],
+              motherDateOfBirth: formattedErrors.mother_date_of_birth || [],
+              motherPlace: formattedErrors.mother_place || [],
+              motherRt: formattedErrors.mother_rt || [],
+              motherRw: formattedErrors.mother_rw || [],
+              motherPostalCode: formattedErrors.mother_postal_code || [],
+            };
+            setErrors(newAllErrors);
+            setLoading(false);
+            alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
+          } else if (error.response.status === 404) {
+            navigate('/orangtua')
+            setLoading(false);
+          } else if (error.response.status === 500) {
+            setErrorPage(true);
+          } else {
+            navigate('/orangtua')
+            setLoading(false);
+          }
+        } else if (error.request) {
+          navigate('/orangtua')
+          setLoading(false);
+        } else {
+          navigate('/orangtua')
+          setLoading(false);
+        }
+      });
+
   }
 
   useEffect(() => {
@@ -245,7 +264,7 @@ const Orangtua = () => {
         if (response.forbidden) {
           return navigate('/login');
         }
-        setUser(response.data);
+        setUser(response.data.data);
         getInfo();
         getProvinces()
           .then((response) => {
@@ -294,7 +313,7 @@ const Orangtua = () => {
                   <div className='grid grid-cols-1 md:grid-cols-3 gap-5'>
                     <div>
                       <label htmlFor="father_name" className="block mb-2 text-sm font-medium text-gray-900">Nama lengkap</label>
-                      <input type="text" id="father_name" value={formData.father_name} maxLength={150} name='father_name' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Nama lengkap" required />
+                      <input type="text" id="father_name" value={formData.father_name} maxLength={150} name='father_name' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Nama lengkap" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.fatherName.length > 0 &&
@@ -308,7 +327,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="father_place_of_birth" className="block mb-2 text-sm font-medium text-gray-900">Tempat lahir</label>
-                      <input type="text" id="father_place_of_birth" maxLength={150} value={formData.father_place_of_birth} name='father_place_of_birth' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Tempat lahir" required />
+                      <input type="text" id="father_place_of_birth" maxLength={150} value={formData.father_place_of_birth} name='father_place_of_birth' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Tempat lahir" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.fatherPlaceOfBirth.length > 0 &&
@@ -322,7 +341,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="father_date_of_birth" className="block mb-2 text-sm font-medium text-gray-900">Tanggal lahir</label>
-                      <input type="date" id="father_date_of_birth" value={formData.father_date_of_birth} name='father_date_of_birth' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Tanggal lahir" required />
+                      <input type="date" id="father_date_of_birth" value={formData.father_date_of_birth} name='father_date_of_birth' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Tanggal lahir" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.fatherDateOfBirth.length > 0 &&
@@ -336,7 +355,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="father_phone" className="block mb-2 text-sm font-medium text-gray-900">No. Whatsapp</label>
-                      <input type="number" id="father_phone" value={formData.father_phone} name='father_phone' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="No. Whatsapp" required />
+                      <input type="number" id="father_phone" value={formData.father_phone} name='father_phone' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="No. Whatsapp" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.fatherPhone.length > 0 &&
@@ -350,7 +369,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="father_education" className="block mb-2 text-sm font-medium text-gray-900">Pendidikan Terakhir</label>
-                      <input type="text" id="father_education" value={formData.father_education} maxLength={150} name='father_education' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Pendidikan" required />
+                      <input type="text" id="father_education" value={formData.father_education} maxLength={150} name='father_education' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Pendidikan" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.fatherEducation.length > 0 &&
@@ -364,7 +383,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="father_job" className="block mb-2 text-sm font-medium text-gray-900">Pekerjaan</label>
-                      <input type="text" id="father_job" value={formData.father_job} maxLength={150} name='father_job' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Pekerjaan" required />
+                      <input type="text" id="father_job" value={formData.father_job} maxLength={150} name='father_job' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Pekerjaan" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.fatherJob.length > 0 &&
@@ -405,7 +424,7 @@ const Orangtua = () => {
                               .catch((error) => {
                                 console.log(error);
                               })
-                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required={true}>
                             <option value="">Pilih Provinsi</option>
                             {
                               fatherProvinces.length > 0 && (
@@ -430,7 +449,7 @@ const Orangtua = () => {
                               .catch((error) => {
                                 console.log(error);
                               })
-                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required disabled={fatherRegencies.length === 0}>
+                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required={true} disabled={fatherRegencies.length === 0}>
                             <option value="">Pilih Kota / Kabupaten</option>
                             {
                               fatherRegencies.length > 0 ? (
@@ -457,7 +476,7 @@ const Orangtua = () => {
                               .catch((error) => {
                                 console.log(error);
                               })
-                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required disabled={fatherDistricts.length === 0}>
+                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required={true} disabled={fatherDistricts.length === 0}>
                             <option value="">Pilih Kecamatan</option>
                             {
                               fatherDistricts.length > 0 ? (
@@ -477,7 +496,7 @@ const Orangtua = () => {
                               ...formData,
                               father_village: e.target.value
                             });
-                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required disabled={fatherVillages.length === 0}>
+                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required={true} disabled={fatherVillages.length === 0}>
                             <option value="">Pilih Desa / Kelurahan</option>
                             {
                               fatherVillages.length > 0 ? (
@@ -492,7 +511,7 @@ const Orangtua = () => {
                         </div>
                         <div>
                           <label htmlFor="father_place" className="block mb-2 text-sm font-medium text-gray-900">Jl/Kp/Perum</label>
-                          <input type="text" id="father_place" value={formData.father_place} maxLength={150} name='father_place' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Jl/Kp/Perum" required />
+                          <input type="text" id="father_place" value={formData.father_place} maxLength={150} name='father_place' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Jl/Kp/Perum" required={true} />
                           <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                             {
                               errors.fatherPlace.length > 0 &&
@@ -506,7 +525,7 @@ const Orangtua = () => {
                         </div>
                         <div>
                           <label htmlFor="father_rt" className="block mb-2 text-sm font-medium text-gray-900">RT.</label>
-                          <input type="number" id="father_rt" value={formData.father_rt} name='father_rt' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="RT." required />
+                          <input type="number" id="father_rt" value={formData.father_rt} name='father_rt' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="RT." required={true} />
                           <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                             {
                               errors.fatherRt.length > 0 &&
@@ -520,7 +539,7 @@ const Orangtua = () => {
                         </div>
                         <div>
                           <label htmlFor="father_rw" className="block mb-2 text-sm font-medium text-gray-900">RW.</label>
-                          <input type="number" id="father_rw" value={formData.father_rw} name='father_rw' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="RW." required />
+                          <input type="number" id="father_rw" value={formData.father_rw} name='father_rw' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="RW." required={true} />
                           <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                             {
                               errors.fatherRw.length > 0 &&
@@ -534,7 +553,7 @@ const Orangtua = () => {
                         </div>
                         <div>
                           <label htmlFor="father_postal_code" className="block mb-2 text-sm font-medium text-gray-900">Kode pos</label>
-                          <input type="number" id="father_postal_code" value={formData.father_postal_code} name='father_postal_code' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Kode pos" required />
+                          <input type="number" id="father_postal_code" value={formData.father_postal_code} name='father_postal_code' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Kode pos" required={true} />
                           <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                             {
                               errors.fatherPostalCode.length > 0 &&
@@ -562,7 +581,7 @@ const Orangtua = () => {
                   <div className='grid grid-cols-1 md:grid-cols-3 gap-5'>
                     <div>
                       <label htmlFor="mother_name" className="block mb-2 text-sm font-medium text-gray-900">Nama lengkap</label>
-                      <input type="text" id="mother_name" value={formData.mother_name} maxLength={150} name='mother_name' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Nama lengkap" required />
+                      <input type="text" id="mother_name" value={formData.mother_name} maxLength={150} name='mother_name' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Nama lengkap" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.motherName.length > 0 &&
@@ -576,7 +595,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="mother_place_of_birth" className="block mb-2 text-sm font-medium text-gray-900">Tempat lahir</label>
-                      <input type="text" id="mother_place_of_birth" maxLength={150} value={formData.mother_place_of_birth} name='mother_place_of_birth' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Tempat lahir" required />
+                      <input type="text" id="mother_place_of_birth" maxLength={150} value={formData.mother_place_of_birth} name='mother_place_of_birth' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Tempat lahir" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.motherPlaceOfBirth.length > 0 &&
@@ -590,7 +609,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="mother_date_of_birth" className="block mb-2 text-sm font-medium text-gray-900">Tanggal lahir</label>
-                      <input type="date" id="mother_date_of_birth" value={formData.mother_date_of_birth} name='mother_date_of_birth' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Tanggal lahir" required />
+                      <input type="date" id="mother_date_of_birth" value={formData.mother_date_of_birth} name='mother_date_of_birth' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Tanggal lahir" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.motherDateOfBirth.length > 0 &&
@@ -604,7 +623,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="mother_phone" className="block mb-2 text-sm font-medium text-gray-900">No. Whatsapp</label>
-                      <input type="number" id="mother_phone" value={formData.mother_phone} name='mother_phone' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="No. Whatsapp" required />
+                      <input type="number" id="mother_phone" value={formData.mother_phone} name='mother_phone' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="No. Whatsapp" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.motherPhone.length > 0 &&
@@ -618,7 +637,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="mother_education" className="block mb-2 text-sm font-medium text-gray-900">Pendidikan Terakhir</label>
-                      <input type="text" id="mother_education" value={formData.mother_education} maxLength={150} name='mother_education' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Pendidikan" required />
+                      <input type="text" id="mother_education" value={formData.mother_education} maxLength={150} name='mother_education' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Pendidikan" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.motherEducation.length > 0 &&
@@ -632,7 +651,7 @@ const Orangtua = () => {
                     </div>
                     <div>
                       <label htmlFor="mother_job" className="block mb-2 text-sm font-medium text-gray-900">Pekerjaan</label>
-                      <input type="text" id="mother_job" value={formData.mother_job} maxLength={150} name='mother_job' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Pekerjaan" required />
+                      <input type="text" id="mother_job" value={formData.mother_job} maxLength={150} name='mother_job' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Pekerjaan" required={true} />
                       <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                         {
                           errors.motherJob.length > 0 &&
@@ -673,7 +692,7 @@ const Orangtua = () => {
                               .catch((error) => {
                                 console.log(error);
                               })
-                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required={true}>
                             <option value="">Pilih Provinsi</option>
                             {
                               motherProvinces.length > 0 && (
@@ -698,7 +717,7 @@ const Orangtua = () => {
                               .catch((error) => {
                                 console.log(error);
                               })
-                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required disabled={motherRegencies.length === 0}>
+                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required={true} disabled={motherRegencies.length === 0}>
                             <option value="">Pilih Kota / Kabupaten</option>
                             {
                               motherRegencies.length > 0 ? (
@@ -725,7 +744,7 @@ const Orangtua = () => {
                               .catch((error) => {
                                 console.log(error);
                               })
-                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required disabled={motherDistricts.length === 0}>
+                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required={true} disabled={motherDistricts.length === 0}>
                             <option value="">Pilih Kecamatan</option>
                             {
                               motherDistricts.length > 0 ? (
@@ -745,7 +764,7 @@ const Orangtua = () => {
                               ...formData,
                               mother_village: e.target.value
                             });
-                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required disabled={motherVillages.length === 0}>
+                          }} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required={true} disabled={motherVillages.length === 0}>
                             <option value="">Pilih Desa / Kelurahan</option>
                             {
                               motherVillages.length > 0 ? (
@@ -760,7 +779,7 @@ const Orangtua = () => {
                         </div>
                         <div>
                           <label htmlFor="mother_place" className="block mb-2 text-sm font-medium text-gray-900">Jl/Kp/Perum</label>
-                          <input type="text" id="mother_place" value={formData.mother_place} maxLength={150} name='mother_place' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Jl/Kp/Perum" required />
+                          <input type="text" id="mother_place" value={formData.mother_place} maxLength={150} name='mother_place' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Jl/Kp/Perum" required={true} />
                           <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                             {
                               errors.motherPlace.length > 0 &&
@@ -774,7 +793,7 @@ const Orangtua = () => {
                         </div>
                         <div>
                           <label htmlFor="mother_rt" className="block mb-2 text-sm font-medium text-gray-900">RT.</label>
-                          <input type="number" id="mother_rt" value={formData.mother_rt} name='mother_rt' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="RT." required />
+                          <input type="number" id="mother_rt" value={formData.mother_rt} name='mother_rt' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="RT." required={true} />
                           <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                             {
                               errors.motherRt.length > 0 &&
@@ -788,7 +807,7 @@ const Orangtua = () => {
                         </div>
                         <div>
                           <label htmlFor="mother_rw" className="block mb-2 text-sm font-medium text-gray-900">RW.</label>
-                          <input type="number" id="mother_rw" value={formData.mother_rw} name='mother_rw' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="RW." required />
+                          <input type="number" id="mother_rw" value={formData.mother_rw} name='mother_rw' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="RW." required={true} />
                           <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                             {
                               errors.motherRw.length > 0 &&
@@ -802,7 +821,7 @@ const Orangtua = () => {
                         </div>
                         <div>
                           <label htmlFor="mother_postal_code" className="block mb-2 text-sm font-medium text-gray-900">Kode pos</label>
-                          <input type="number" id="mother_postal_code" value={formData.mother_postal_code} name='mother_postal_code' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Kode pos" required />
+                          <input type="number" id="mother_postal_code" value={formData.mother_postal_code} name='mother_postal_code' onChange={handleChange} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 p-2.5" placeholder="Kode pos" required={true} />
                           <ul className="ml-2 mt-2 text-xs text-red-600 list-disc">
                             {
                               errors.motherPostalCode.length > 0 &&

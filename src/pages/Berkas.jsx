@@ -22,9 +22,9 @@ const Berkas = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/profile', {
+    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: token
       }
     })
       .then((response) => {
@@ -65,26 +65,25 @@ const Berkas = () => {
         };
         const token = localStorage.getItem('LP3IPPO:token');
         await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmbonline/upload`, data)
-          .then(async (res) => {
-            await axios.post(`https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/userupload`, status, {
-              headers: { Authorization: `Bearer ${token}` }
+          .then(async () => {
+            await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload`, status, {
+              headers: { Authorization: token }
             }
-            ).then((res) => {
+            ).then((response) => {
               getInfo();
-              alert("Berhasil diupload!");
+              alert(response.data.message);
               setLoading(false);
             })
-              .catch((error) => {
+              .catch(() => {
                 alert("Mohon maaf, ada kesalahan di sisi Server.");
                 setLoading(false);
               });
           })
-          .catch((error) => {
+          .catch(() => {
             alert("Mohon maaf, ada kesalahan di sisi Server.");
             setLoading(false);
           });
       };
-
       reader.readAsDataURL(targetFile);
     }
   };
@@ -96,8 +95,8 @@ const Berkas = () => {
 
   const handleDelete = async (user) => {
     if (confirm(`Apakah kamu yakin akan menghapus data?`)) {
-      let data = {
-        identity: user.identity_user,
+      const data = {
+        identity: user.identityUser,
         namefile: user.fileupload.namefile,
         typefile: user.typefile,
       };
@@ -110,27 +109,26 @@ const Berkas = () => {
             params: data,
           }
         )
-        .then(async (res) => {
+        .then(async () => {
+          setLoading(false);
           await axios
             .delete(
-              `https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/userupload/${user.id}`, {
+              `https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload/${user.id}`, {
               headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: token
               }
             }
             )
-            .then((res) => {
+            .then((response) => {
               getInfo();
-              alert(res.data.message);
+              alert(response.data.message);
               setLoading(false);
             })
-            .catch((err) => {
-              console.log(err);
+            .catch(() => {
               setLoading(false);
             });
         })
-        .catch((err) => {
-          console.log(err);
+        .catch(() => {
           setLoading(false);
         });
     }
@@ -143,7 +141,7 @@ const Berkas = () => {
         if (response.forbidden) {
           return navigate('/login');
         }
-        setUser(response.data);
+        setUser(response.data.data);
         getInfo();
       })
       .catch((error) => {

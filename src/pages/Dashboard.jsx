@@ -29,7 +29,7 @@ const Dashboard = () => {
   const getInfo = async () => {
     setLoading(true);
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('http://localhost:3000/pmb/profiles/v1', {
+    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
       headers: {
         Authorization: token
       },
@@ -59,9 +59,9 @@ const Dashboard = () => {
     const confirmed = confirm('Apakah anda yakin akan keluar?');
     if (confirmed) {
       const token = localStorage.getItem('LP3IPPO:token');
-      await axios.get('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/logout', {
+      await axios.delete('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/logout', {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: token
         }
       })
         .then(() => {
@@ -69,7 +69,13 @@ const Dashboard = () => {
           navigate('/login')
         })
         .catch((error) => {
-          console.log(error);
+          if (error.response.status == 401) {
+            localStorage.removeItem('LP3IPPO:token');
+            navigate('/login')
+          }
+          if (error.response.status == 500) {
+            setErrorPage(true);
+          }
         })
     }
   }

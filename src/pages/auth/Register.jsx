@@ -57,7 +57,7 @@ const Register = () => {
       } else if (field == 'email') {
         value = email;
       }
-      await axios.post('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswa-ppo/check', {
+      await axios.post('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/validation', {
         value: value,
         field: field
       })
@@ -82,7 +82,6 @@ const Register = () => {
         })
         .catch((error) => {
           const responseError = error.response;
-          console.log(responseError);
           if (responseError.status == 404 && responseError.data.create) {
             if (field == 'phone') {
               setWhatsappMessage(true);
@@ -113,14 +112,16 @@ const Register = () => {
     if (whatsapp !== '' && email !== '' && name !== '' && information !== '') {
       const confirmed = confirm(`Berikut data yang akan didaftarkan\n------\nNama lengkap: ${name}\nEmail: ${email}\nNo. Whatsapp: ${whatsapp}\n------\nApakah sudah benar?`)
       if (confirmed) {
-        await axios.post('https://database.politekniklp3i-tasikmalaya.ac.id/api/beasiswappo/register', {
+        await axios.post('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/register/v1', {
           phone: whatsapp,
           email: email,
           name: name,
           information: information
+        },{
+          withCredentials: true
         })
           .then((response) => {
-            localStorage.setItem('LP3IPPO:token', response.data.access_token)
+            localStorage.setItem('LP3IPPO:token', response.data.token)
             setLoading(false);
             alert(response.data.message);
             navigate('/dashboard');
@@ -142,8 +143,9 @@ const Register = () => {
   }
 
   const getPresenters = async () => {
-    await axios.get(`https://database.politekniklp3i-tasikmalaya.ac.id/api/presenters`)
+    await axios.get(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/presenters`)
     .then((response) => {
+      console.log(response.data);
       setPresenters(response.data)
     })
     .catch((error) => {

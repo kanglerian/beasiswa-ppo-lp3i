@@ -13,14 +13,14 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const [email, setEmail] = useState("kanglerian@gmail.com");
-  const [password, setPassword] = useState("6281286501015");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const loginHandle = async (e) => {
     e.preventDefault();
-    // setLoading(true);
+    setLoading(true);
     if (email !== '' && password !== '') {
-      await axios.post('http://localhost:3000/pmb/auth/login', {
+      await axios.post('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/login', {
         email: email,
         password: password,
       }, { withCredentials: true })
@@ -30,7 +30,6 @@ const Login = () => {
           navigate('/dashboard');
         })
         .catch((error) => {
-          console.log(error);
           if (error.response.status == 500) {
             alert(`Mohon maaf server sedang tidak tersedia, silahkan hubungi Administrator.`);
           }
