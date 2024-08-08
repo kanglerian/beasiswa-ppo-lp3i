@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { checkTokenExpiration } from '../middleware/middleware';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBook, faCheckCircle, faFilePdf, faSignOut, faUserCircle, faUsers, faXmarkCircle } from '@fortawesome/free-solid-svg-icons'
 import LogoLP3IPutih from '../assets/logo-lp3i-putih.svg'
 import LogoTagline from '../assets/tagline-warna.png'
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'
 import ServerError from './errors/ServerError';
 import LoadingScreen from './LoadingScreen';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
@@ -28,72 +28,120 @@ const Dashboard = () => {
 
   const getInfo = async () => {
     setLoading(true);
-    const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
-      headers: {
-        Authorization: token
-      },
-      withCredentials: true,
-    })
-      .then((response) => {
-        setValidateData(response.data.validate.validate_data);
-        setValidateFather(response.data.validate.validate_father);
-        setValidateMother(response.data.validate.validate_mother);
-        setValidateProgram(response.data.validate.validate_program);
-        setValidateFiles(response.data.validate.validate_files);
-        setValidate(response.data.validate.validate);
-        setLoading(false)
-      })
-      .catch((error) => {
-        if (error.response.status == 401) {
-          localStorage.removeItem('LP3IPPO:token');
-          navigate('/login')
-        }
-        if (error.response.status == 500) {
+
+    try {
+      const token = localStorage.getItem('LP3IPPO:token');
+      if (!token) {
+        throw new Error('Token tidak ditemukan');
+      }
+
+      const decoded = jwtDecode(token);
+      setUser(decoded.data);
+
+      const fetchProfile = async (token) => {
+        const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
+          headers: { Authorization: token },
+          withCredentials: true,
+        });
+        return response.data;
+      };
+
+      try {
+        const profileData = await fetchProfile(token);
+        setValidateData(profileData.validate.validate_data);
+        setValidateFather(profileData.validate.validate_father);
+        setValidateMother(profileData.validate.validate_mother);
+        setValidateProgram(profileData.validate.validate_program);
+        setValidateFiles(profileData.validate.validate_files);
+        setValidate(profileData.validate.validate);
+      } catch (profileError) {
+        if (profileError.response && profileError.response.status === 403) {
+          try {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+              withCredentials: true,
+            });
+
+            const newToken = response.data;
+            const decodedNewToken = jwtDecode(newToken);
+            localStorage.setItem('LP3IPPO:token', newToken);
+            setUser(decodedNewToken.data);
+
+            const newProfileData = await fetchProfile(newToken);
+            setValidateData(newProfileData.validate.validate_data);
+            setValidateFather(newProfileData.validate.validate_father);
+            setValidateMother(newProfileData.validate.validate_mother);
+            setValidateProgram(newProfileData.validate.validate_program);
+            setValidateFiles(newProfileData.validate.validate_files);
+            setValidate(newProfileData.validate.validate);
+          } catch (error) {
+            console.error('Error refreshing token or fetching profile:', error);
+            if (error.response && error.response.status === 400) {
+              localStorage.removeItem('LP3IPPO:token');
+            } else {
+              setErrorPage(true);
+            }
+          }
+        } else {
+          console.error('Error fetching profile:', profileError);
           setErrorPage(true);
         }
-      })
-  }
+      }
+    } catch (error) {
+      if (error.response) {
+        if ([400, 403].includes(error.response.status)) {
+          localStorage.removeItem('LP3IPPO:token');
+          navigate('/login');
+        } else {
+          console.error('Unexpected HTTP error:', error);
+        }
+      } else if (error.request) {
+        console.error('Network error:', error);
+      } else {
+        console.error('Error:', error);
+        setErrorPage(true);
+      }
+      navigate('/login');
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    }
+  };
 
   const logoutHandle = async () => {
-    const confirmed = confirm('Apakah anda yakin akan keluar?');
-    if (confirmed) {
+    if (window.confirm('Apakah Anda yakin akan keluar?')) {
       const token = localStorage.getItem('LP3IPPO:token');
-      await axios.delete('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/logout', {
-        headers: {
-          Authorization: token
-        }
-      })
-        .then(() => {
+
+      if (!token) {
+        console.log('Token tidak ditemukan saat logout');
+        navigate('/login');
+        return;
+      }
+
+      try {
+        await axios.delete('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/logout', {
+          headers: { Authorization: token },
+          withCredentials: true,
+        });
+
+        localStorage.removeItem('LP3IPPO:token');
+        navigate('/login');
+      } catch (error) {
+        const status = error.response?.status;
+
+        if (status === 401 || status === 500) {
           localStorage.removeItem('LP3IPPO:token');
-          navigate('/login')
-        })
-        .catch((error) => {
-          if (error.response.status == 401) {
-            localStorage.removeItem('LP3IPPO:token');
-            navigate('/login')
-          }
-          if (error.response.status == 500) {
-            setErrorPage(true);
-          }
-        })
+          navigate('/login');
+        } else {
+          console.error('Logout error:', error);
+          setErrorPage(true);
+        }
+      }
     }
   }
 
   useEffect(() => {
-    checkTokenExpiration()
-      .then((response) => {
-        if (response.forbidden) {
-          return navigate('/login');
-        }
-        setUser(response.data.data);
-        getInfo();
-      })
-      .catch((error) => {
-        if (error.forbidden) {
-          return navigate('/login');
-        }
-      })
+    getInfo();
   }, []);
 
   return (

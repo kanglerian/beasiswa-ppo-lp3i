@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
 import { checkTokenExpiration } from '../../middleware/middleware'
@@ -34,6 +34,9 @@ const Login = () => {
             alert(`Mohon maaf server sedang tidak tersedia, silahkan hubungi Administrator.`);
           }
           if (error.response.status == 401) {
+            alert(error.response.data.message);
+          }
+          if (error.response.status == 404) {
             alert(error.response.data.message);
           }
           setLoading(false);
@@ -82,7 +85,7 @@ const Login = () => {
               <div className='flex relative gap-2'>
                 <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-gray-50 border-2 border-lp3i-100 outline-none text-gray-900 text-sm rounded-xl focus:none block w-full px-4 py-2.5" placeholder="Password" required />
                 <button type='button' onClick={() => setShowPassword(!showPassword)} className='absolute text-gray-400 hover:text-gray-500 right-4 top-1/2 transform -translate-y-1/2'>
-                  <FontAwesomeIcon icon={faEye} />
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
                 </button>
               </div>
               <p className="ml-2 mt-2 text-xs text-gray-700">

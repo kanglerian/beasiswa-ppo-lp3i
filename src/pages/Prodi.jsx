@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { checkTokenExpiration } from '../middleware/middleware'
+import { jwtDecode } from 'jwt-decode'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faCircleDot, faSave } from '@fortawesome/free-solid-svg-icons'
@@ -29,53 +29,88 @@ const Prodi = () => {
   });
 
   const getInfo = async () => {
-    const token = localStorage.getItem('LP3IPPO:token');
     setLoading(true);
-    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
-      headers: {
-        Authorization: token
-      },
-      withCredentials: true,
-    })
-      .then((response) => {
-        setFormData({
-          program: response.data.applicant.program,
-          program_second: response.data.applicant.program_second,
+
+    try {
+      const token = localStorage.getItem('LP3IPPO:token');
+      if (!token) {
+        throw new Error('Token tidak ditemukan');
+      }
+
+      const decoded = jwtDecode(token);
+      setUser(decoded.data);
+
+      const fetchProfile = async (token) => {
+        const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
+          headers: { Authorization: token },
+          withCredentials: true,
         });
-        setLoading(false);
-      })
-      .catch((error) => {
-        if (error.code === 'ERR_NETWORK') {
-          setErrorPage(true);
-        } else if (error.code === 'ECONNABORTED') {
-          navigate('/programstudi')
+        return response.data;
+      };
+
+      try {
+        const profileData = await fetchProfile(token);
+        setFormData({
+          program: profileData.applicant.program,
+          program_second: profileData.applicant.program_second,
+        });
+        setTimeout(() => {
           setLoading(false);
-        } else if (error.response) {
-          if (error.response.status === 401) {
-            localStorage.removeItem('LP3IPPO:token');
-            navigate('/login');
-          } else if (error.response.status === 403) {
-            navigate('/programstudi')
-            setLoading(false);
-          } else if (error.response.status === 404) {
-            navigate('/programstudi')
-            setLoading(false);
-          } else if (error.response.status === 500) {
-            setErrorPage(true);
-          } else {
-            navigate('/programstudi')
-            setLoading(false);
+        }, 1000);
+      } catch (profileError) {
+        if (profileError.response && profileError.response.status === 403) {
+          try {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+              withCredentials: true,
+            });
+
+            const newToken = response.data;
+            const decodedNewToken = jwtDecode(newToken);
+            localStorage.setItem('LP3IPPO:token', newToken);
+            setUser(decodedNewToken.data);
+
+            const newProfileData = await fetchProfile(newToken);
+            setFormData({
+              program: newProfileData.applicant.program,
+              program_second: newProfileData.applicant.program_second,
+            });
+            setTimeout(() => {
+              setLoading(false);
+            }, 1000);
+          } catch (error) {
+            console.error('Error refreshing token or fetching profile:', error);
+            if (error.response && error.response.status === 400) {
+              localStorage.removeItem('LP3IPPO:token');
+            } else {
+              setErrorPage(true);
+            }
           }
-        } else if (error.request) {
-          navigate('/programstudi')
-          setLoading(false);
         } else {
-          navigate('/programstudi')
-          setLoading(false);
+          console.error('Error fetching profile:', profileError);
+          setErrorPage(true);
         }
+      }
+    } catch (error) {
+      if (error.response) {
+        if ([400, 403].includes(error.response.status)) {
+          localStorage.removeItem('LP3IPPO:token');
+          navigate('/login');
+        } else {
+          console.error('Unexpected HTTP error:', error);
+        }
+      } else if (error.request) {
+        console.error('Network error:', error);
+      } else {
+        console.error('Error:', error);
+        setErrorPage(true);
+      }
+      navigate('/login');
+    } finally {
+      setTimeout(() => {
         setLoading(false);
-      })
-  }
+      }, 1000);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -107,50 +142,94 @@ const Prodi = () => {
         navigate('/dashboard');
         alert(response.data.message);
       })
-      .catch((error) => {
-        if (error.code === 'ERR_NETWORK') {
-          setErrorPage(true);
-        } else if (error.code === 'ECONNABORTED') {
-          navigate('/programstudi')
-          setLoading(false);
-        } else if (error.response) {
-          if (error.response.status === 401) {
-            localStorage.removeItem('LP3IPPO:token');
-            navigate('/login');
-          } else if (error.response.status === 403) {
-            navigate('/programstudi')
-            setLoading(false);
-          } else if (error.response.status === 422) {
-            const errorArray = error.response.data.errors || [];
-            const formattedErrors = errorArray.reduce((acc, err) => {
-              if (!acc[err.path]) {
-                acc[err.path] = [];
+      .catch(async (error) => {
+        if (error.response && error.response.status === 403) {
+          try {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+              withCredentials: true,
+            });
+
+            const newToken = response.data;
+            const decodedNewToken = jwtDecode(newToken);
+            localStorage.setItem('LP3IPPO:token', newToken);
+            setUser(decodedNewToken.data);
+
+            const responseData = await axios.patch(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/applicants/updateprodi/v1/${user.identity}`, formData, {
+              headers: {
+                Authorization: newToken
+              },
+              withCredentials: true
+            })
+
+            getInfo();
+            setTimeout(() => {
+              setLoading(false);
+            }, 2000);
+            navigate('/dashboard');
+            alert(responseData.data.message);
+
+          } catch (error) {
+            if (error.response && error.response.status === 422) {
+              const errorArray = error.response.data.errors || [];
+              const formattedErrors = errorArray.reduce((acc, err) => {
+                if (!acc[err.path]) {
+                  acc[err.path] = [];
+                }
+                acc[err.path].push(err.msg);
+                return acc;
+              }, {});
+              const newAllErrors = {
+                name: formattedErrors.name || [],
+                gender: formattedErrors.gender || [],
+                placeOfBirth: formattedErrors.place_of_birth || [],
+                dateOfBirth: formattedErrors.date_of_birth || [],
+                religion: formattedErrors.religion || [],
+                school: formattedErrors.school || [],
+                major: formattedErrors.major || [],
+                class: formattedErrors.class || [],
+                year: formattedErrors.year || [],
+                incomeParent: formattedErrors.income_parent || [],
+                socialMedia: formattedErrors.social_media || [],
+                place: formattedErrors.place || [],
+                rt: formattedErrors.rt || [],
+                rw: formattedErrors.rw || [],
+                postalCode: formattedErrors.postal_code || [],
+              };
+              setErrors(newAllErrors);
+              setTimeout(() => {
+                setLoading(false);
+              }, 1000);
+              alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
+            } else {
+              console.error('Error refreshing token or fetching profile:', error);
+              if (error.response && error.response.status === 400) {
+                localStorage.removeItem('LP3IPPO:token');
+              } else {
+                setErrorPage(true);
               }
-              acc[err.path].push(err.msg);
-              return acc;
-            }, {});
-            const newAllErrors = {
-              program: formattedErrors.program || [],
-              programSecond: formattedErrors.program_second || [],
-            };
-            setErrors(newAllErrors);
-            setLoading(false);
-            alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
-          } else if (error.response.status === 404) {
-            navigate('/programstudi')
-            setLoading(false);
-          } else if (error.response.status === 500) {
-            setErrorPage(true);
-          } else {
-            navigate('/programstudi')
-            setLoading(false);
+            }
           }
-        } else if (error.request) {
-          navigate('/programstudi')
-          setLoading(false);
+        } else if (error.response && error.response.status === 422) {
+          const errorArray = error.response.data.errors || [];
+          const formattedErrors = errorArray.reduce((acc, err) => {
+            if (!acc[err.path]) {
+              acc[err.path] = [];
+            }
+            acc[err.path].push(err.msg);
+            return acc;
+          }, {});
+          const newAllErrors = {
+            program: formattedErrors.program || [],
+            programSecond: formattedErrors.program_second || [],
+          };
+          setErrors(newAllErrors);
+          setTimeout(() => {
+            setLoading(false);
+          }, 1000);
+          alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
         } else {
-          navigate('/programstudi')
-          setLoading(false);
+          console.error('Error fetching profile:', error);
+          setErrorPage(true);
         }
       });
   }
@@ -174,20 +253,8 @@ const Prodi = () => {
   };
 
   useEffect(() => {
-    checkTokenExpiration()
-      .then((response) => {
-        if (response.forbidden) {
-          return navigate('/login');
-        }
-        setUser(response.data.data);
-        getInfo();
-        getPrograms();
-      })
-      .catch((error) => {
-        if (error.forbidden) {
-          return navigate('/login');
-        }
-      })
+    getInfo();
+    getPrograms();
   }, []);
   return (
     errorPage ? (

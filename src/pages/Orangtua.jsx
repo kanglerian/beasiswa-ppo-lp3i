@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { checkTokenExpiration } from '../middleware/middleware'
+import { jwtDecode } from 'jwt-decode'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faCircleDot, faEdit, faSave } from '@fortawesome/free-solid-svg-icons'
@@ -93,52 +93,125 @@ const Orangtua = () => {
 
   const getInfo = async () => {
     setLoading(true);
-    const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
-      headers: {
-        Authorization: token
-      },
-      withCredentials: true,
-    })
-      .then((response) => {
+    try {
+      const token = localStorage.getItem('LP3IPPO:token');
+      if (!token) {
+        throw new Error('Token tidak ditemukan');
+      }
+      const decoded = jwtDecode(token);
+      setUser(decoded.data);
+      const fetchProfile = async (token) => {
+        const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
+          headers: { Authorization: token },
+          withCredentials: true,
+        });
+        return response.data;
+      };
+      try {
+        const profileData = await fetchProfile(token);
         setEditFatherAddress(false);
         setEditMotherAddress(false);
         setFormData({
           // Father
-          father_name: response.data.father.name,
-          father_phone: response.data.father.phone,
-          father_education: response.data.father.education,
-          father_job: response.data.father.job,
-          father_place_of_birth: response.data.father.place_of_birth,
-          father_date_of_birth: response.data.father.date_of_birth,
-          father_address: response.data.father.address,
+          father_name: profileData.father.name,
+          father_phone: profileData.father.phone,
+          father_education: profileData.father.education,
+          father_job: profileData.father.job,
+          father_place_of_birth: profileData.father.place_of_birth,
+          father_date_of_birth: profileData.father.date_of_birth,
+          father_address: profileData.father.address,
           // Mother
-          mother_name: response.data.mother.name,
-          mother_phone: response.data.mother.phone,
-          mother_education: response.data.mother.education,
-          mother_job: response.data.mother.job,
-          mother_place_of_birth: response.data.mother.place_of_birth,
-          mother_date_of_birth: response.data.mother.date_of_birth,
-          mother_address: response.data.mother.address,
+          mother_name: profileData.mother.name,
+          mother_phone: profileData.mother.phone,
+          mother_education: profileData.mother.education,
+          mother_job: profileData.mother.job,
+          mother_place_of_birth: profileData.mother.place_of_birth,
+          mother_date_of_birth: profileData.mother.date_of_birth,
+          mother_address: profileData.mother.address,
         });
-        if (!response.data.father.address) {
+        if (!profileData.father.address) {
           setEditFatherAddress(true);
         }
-        if (!response.data.mother.address) {
+        if (!profileData.mother.address) {
           setEditMotherAddress(true);
         }
-        setLoading(false);
-      })
-      .catch((error) => {
-        if (error.response.status == 401) {
-          localStorage.removeItem('LP3IPPO:token');
-          navigate('/login')
-        }
-        if (error.response.status == 500) {
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      } catch (profileError) {
+        if (profileError.response && profileError.response.status === 403) {
+          try {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+              withCredentials: true,
+            });
+            const newToken = response.data;
+            const decodedNewToken = jwtDecode(newToken);
+            localStorage.setItem('LP3IPPO:token', newToken);
+            setUser(decodedNewToken.data);
+            const newProfileData = await fetchProfile(newToken);
+            setEditFatherAddress(false);
+            setEditMotherAddress(false);
+            setFormData({
+              // Father
+              father_name: newProfileData.father.name,
+              father_phone: newProfileData.father.phone,
+              father_education: newProfileData.father.education,
+              father_job: newProfileData.father.job,
+              father_place_of_birth: newProfileData.father.place_of_birth,
+              father_date_of_birth: newProfileData.father.date_of_birth,
+              father_address: newProfileData.father.address,
+              // Mother
+              mother_name: newProfileData.mother.name,
+              mother_phone: newProfileData.mother.phone,
+              mother_education: newProfileData.mother.education,
+              mother_job: newProfileData.mother.job,
+              mother_place_of_birth: newProfileData.mother.place_of_birth,
+              mother_date_of_birth: newProfileData.mother.date_of_birth,
+              mother_address: newProfileData.mother.address,
+            });
+            if (!newProfileData.father.address) {
+              setEditFatherAddress(true);
+            }
+            if (!newProfileData.mother.address) {
+              setEditMotherAddress(true);
+            }
+            setTimeout(() => {
+              setLoading(false);
+            }, 1000);
+          } catch (error) {
+            console.error('Error refreshing token or fetching profile:', error);
+            if (error.response && error.response.status === 400) {
+              localStorage.removeItem('LP3IPPO:token');
+            } else {
+              setErrorPage(true);
+            }
+          }
+        } else {
+          console.error('Error fetching profile:', profileError);
           setErrorPage(true);
         }
-      })
-  }
+      }
+    } catch (error) {
+      if (error.response) {
+        if ([400, 403].includes(error.response.status)) {
+          localStorage.removeItem('LP3IPPO:token');
+          navigate('/login');
+        } else {
+          console.error('Unexpected HTTP error:', error);
+        }
+      } else if (error.request) {
+        console.error('Network error:', error);
+      } else {
+        console.error('Error:', error);
+        setErrorPage(true);
+      }
+      navigate('/login');
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -191,94 +264,127 @@ const Orangtua = () => {
         navigate('/dashboard');
         alert(response.data.message);
       })
-      .catch((error) => {
-        if (error.code === 'ERR_NETWORK') {
-          setErrorPage(true);
-        } else if (error.code === 'ECONNABORTED') {
-          navigate('/orangtua')
-          setLoading(false);
-        } else if (error.response) {
-          if (error.response.status === 401) {
-            localStorage.removeItem('LP3IPPO:token');
-            navigate('/login');
-          } else if (error.response.status === 403) {
-            navigate('/orangtua')
-            setLoading(false);
-          } else if (error.response.status === 422) {
-            const errorArray = error.response.data.errors || [];
-            const formattedErrors = errorArray.reduce((acc, err) => {
-              if (!acc[err.path]) {
-                acc[err.path] = [];
+      .catch(async (error) => {
+        if (error.response && error.response.status === 403) {
+          try {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+              withCredentials: true,
+            });
+
+            const newToken = response.data;
+            const decodedNewToken = jwtDecode(newToken);
+            localStorage.setItem('LP3IPPO:token', newToken);
+            setUser(decodedNewToken.data);
+
+            const responseData = await axios.patch(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/applicants/updatefamily/v1/${user.identity}`, formData, {
+              headers: {
+                Authorization: newToken
+              },
+              withCredentials: true
+            })
+
+            getInfo();
+            setTimeout(() => {
+              setLoading(false);
+            }, 2000);
+            navigate('/dashboard');
+            alert(responseData.data.message);
+
+          } catch (error) {
+            if (error.response && error.response.status === 422) {
+              const errorArray = error.response.data.errors || [];
+              const formattedErrors = errorArray.reduce((acc, err) => {
+                if (!acc[err.path]) {
+                  acc[err.path] = [];
+                }
+                acc[err.path].push(err.msg);
+                return acc;
+              }, {});
+              const newAllErrors = {
+                name: formattedErrors.name || [],
+                gender: formattedErrors.gender || [],
+                placeOfBirth: formattedErrors.place_of_birth || [],
+                dateOfBirth: formattedErrors.date_of_birth || [],
+                religion: formattedErrors.religion || [],
+                school: formattedErrors.school || [],
+                major: formattedErrors.major || [],
+                class: formattedErrors.class || [],
+                year: formattedErrors.year || [],
+                incomeParent: formattedErrors.income_parent || [],
+                socialMedia: formattedErrors.social_media || [],
+                place: formattedErrors.place || [],
+                rt: formattedErrors.rt || [],
+                rw: formattedErrors.rw || [],
+                postalCode: formattedErrors.postal_code || [],
+              };
+              setErrors(newAllErrors);
+              setTimeout(() => {
+                setLoading(false);
+              }, 1000);
+              alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
+            } else {
+              console.error('Error refreshing token or fetching profile:', error);
+              if (error.response && error.response.status === 400) {
+                localStorage.removeItem('LP3IPPO:token');
+              } else {
+                setErrorPage(true);
               }
-              acc[err.path].push(err.msg);
-              return acc;
-            }, {});
-            const newAllErrors = {
-              fatherName: formattedErrors.father_name || [],
-              fatherPhone: formattedErrors.father_phone || [],
-              fatherJob: formattedErrors.father_job || [],
-              fatherEducation: formattedErrors.father_date_of_birth || [],
-              fatherPlaceOfBirth: formattedErrors.father_place_of_birth || [],
-              fatherDateOfBirth: formattedErrors.father_date_of_birth || [],
-              fatherPlace: formattedErrors.father_place || [],
-              fatherRt: formattedErrors.father_rt || [],
-              fatherRw: formattedErrors.father_rw || [],
-              fatherPostalCode: formattedErrors.father_postal_code || [],
-              motherName: formattedErrors.mother_name || [],
-              motherPhone: formattedErrors.mother_phone || [],
-              motherJob: formattedErrors.mother_job || [],
-              motherEducation: formattedErrors.mother_date_of_birth || [],
-              motherPlaceOfBirth: formattedErrors.mother_place_of_birth || [],
-              motherDateOfBirth: formattedErrors.mother_date_of_birth || [],
-              motherPlace: formattedErrors.mother_place || [],
-              motherRt: formattedErrors.mother_rt || [],
-              motherRw: formattedErrors.mother_rw || [],
-              motherPostalCode: formattedErrors.mother_postal_code || [],
-            };
-            setErrors(newAllErrors);
-            setLoading(false);
-            alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
-          } else if (error.response.status === 404) {
-            navigate('/orangtua')
-            setLoading(false);
-          } else if (error.response.status === 500) {
-            setErrorPage(true);
-          } else {
-            navigate('/orangtua')
-            setLoading(false);
+            }
           }
-        } else if (error.request) {
-          navigate('/orangtua')
-          setLoading(false);
+        } else if (error.response && error.response.status === 422) {
+          const errorArray = error.response.data.errors || [];
+          const formattedErrors = errorArray.reduce((acc, err) => {
+            if (!acc[err.path]) {
+              acc[err.path] = [];
+            }
+            acc[err.path].push(err.msg);
+            return acc;
+          }, {});
+          const newAllErrors = {
+            fatherName: formattedErrors.father_name || [],
+            fatherPhone: formattedErrors.father_phone || [],
+            fatherJob: formattedErrors.father_job || [],
+            fatherEducation: formattedErrors.father_date_of_birth || [],
+            fatherPlaceOfBirth: formattedErrors.father_place_of_birth || [],
+            fatherDateOfBirth: formattedErrors.father_date_of_birth || [],
+            fatherPlace: formattedErrors.father_place || [],
+            fatherRt: formattedErrors.father_rt || [],
+            fatherRw: formattedErrors.father_rw || [],
+            fatherPostalCode: formattedErrors.father_postal_code || [],
+            motherName: formattedErrors.mother_name || [],
+            motherPhone: formattedErrors.mother_phone || [],
+            motherJob: formattedErrors.mother_job || [],
+            motherEducation: formattedErrors.mother_date_of_birth || [],
+            motherPlaceOfBirth: formattedErrors.mother_place_of_birth || [],
+            motherDateOfBirth: formattedErrors.mother_date_of_birth || [],
+            motherPlace: formattedErrors.mother_place || [],
+            motherRt: formattedErrors.mother_rt || [],
+            motherRw: formattedErrors.mother_rw || [],
+            motherPostalCode: formattedErrors.mother_postal_code || [],
+          };
+          setErrors(newAllErrors);
+          setTimeout(() => {
+            setLoading(false);
+          }, 1000);
+          alert('Silahkan periksa kembali form yang telah diisi, ada kesalahan pengisian.');
         } else {
-          navigate('/orangtua')
-          setLoading(false);
+          console.error('Error fetching profile:', error);
+          setErrorPage(true);
         }
       });
 
   }
 
   useEffect(() => {
-    checkTokenExpiration()
+    getInfo();
+    getProvinces()
       .then((response) => {
-        if (response.forbidden) {
-          return navigate('/login');
-        }
-        setUser(response.data.data);
-        getInfo();
-        getProvinces()
-          .then((response) => {
-            setFatherProvinces(response);
-            setMotherProvinces(response);
-          })
-          .catch(error => console.log(error));
+        setFatherProvinces(response);
+        setMotherProvinces(response);
       })
-      .catch((error) => {
-        if (error.forbidden) {
-          return navigate('/login');
-        }
-      })
+      .catch(error => console.log(error));
   }, []);
+
   return (
     errorPage ? (
       <ServerError />

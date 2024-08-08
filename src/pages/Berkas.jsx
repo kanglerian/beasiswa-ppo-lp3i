@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faCheckCircle, faCircleDot, faTrash, } from '@fortawesome/free-solid-svg-icons'
-import { checkTokenExpiration } from '../middleware/middleware'
+import { jwtDecode } from 'jwt-decode'
 import LogoLP3IPutih from '../assets/logo-lp3i-putih.svg'
 import ServerError from './errors/ServerError'
 import LoadingScreen from './LoadingScreen';
@@ -21,27 +21,77 @@ const Berkas = () => {
 
   const getInfo = async () => {
     setLoading(true);
-    const token = localStorage.getItem('LP3IPPO:token');
-    await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
-      headers: {
-        Authorization: token
+    try {
+      const token = localStorage.getItem('LP3IPPO:token');
+      if (!token) {
+        throw new Error('Token tidak ditemukan');
       }
-    })
-      .then((response) => {
-        setUserupload(response.data.userupload);
-        setFileupload(response.data.fileupload);
-        setLoading(false);
-      })
-      .catch((error) => {
-        if (error.response.status == 401) {
-          localStorage.removeItem('LP3IPPO:token');
-          navigate('/login')
-        }
-        if (error.response.status == 500) {
+      const decoded = jwtDecode(token);
+      setUser(decoded.data);
+      const fetchProfile = async (token) => {
+        const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
+          headers: { Authorization: token },
+          withCredentials: true,
+        });
+        return response.data;
+      };
+      try {
+        const profileData = await fetchProfile(token);
+        setUserupload(profileData.userupload);
+        setFileupload(profileData.fileupload);
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      } catch (profileError) {
+        if (profileError.response && profileError.response.status === 403) {
+          try {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+              withCredentials: true,
+            });
+            const newToken = response.data;
+            const decodedNewToken = jwtDecode(newToken);
+            localStorage.setItem('LP3IPPO:token', newToken);
+            setUser(decodedNewToken.data);
+            const newProfileData = await fetchProfile(newToken);
+            setUserupload(newProfileData.userupload);
+            setFileupload(newProfileData.fileupload);
+            setTimeout(() => {
+              setLoading(false);
+            }, 1000);
+          } catch (error) {
+            console.error('Error refreshing token or fetching profile:', error);
+            if (error.response && error.response.status === 400) {
+              localStorage.removeItem('LP3IPPO:token');
+            } else {
+              setErrorPage(true);
+            }
+          }
+        } else {
+          console.error('Error fetching profile:', profileError);
           setErrorPage(true);
         }
-      })
-  }
+      }
+    } catch (error) {
+      if (error.response) {
+        if ([400, 403].includes(error.response.status)) {
+          localStorage.removeItem('LP3IPPO:token');
+          navigate('/login');
+        } else {
+          console.error('Unexpected HTTP error:', error);
+        }
+      } else if (error.request) {
+        console.error('Network error:', error);
+      } else {
+        console.error('Error:', error);
+        setErrorPage(true);
+      }
+      navigate('/login');
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    }
+  };
 
   const handleFileChange = (e) => {
     e.preventDefault();
@@ -67,16 +117,47 @@ const Berkas = () => {
         await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmbonline/upload`, data)
           .then(async () => {
             await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload`, status, {
-              headers: { Authorization: token }
+              headers: { Authorization: token },
+              withCredentials: true
             }
-            ).then((response) => {
+            ).then(() => {
               getInfo();
-              alert(response.data.message);
-              setLoading(false);
-            })
-              .catch(() => {
-                alert("Mohon maaf, ada kesalahan di sisi Server.");
+              setTimeout(() => {
                 setLoading(false);
+              }, 1000);
+            })
+              .catch(async (error) => {
+                if (error.response && error.response.status === 403) {
+                  try {
+                    const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+                      withCredentials: true,
+                    });
+
+                    const newToken = response.data;
+                    const decodedNewToken = jwtDecode(newToken);
+                    localStorage.setItem('LP3IPPO:token', newToken);
+                    setUser(decodedNewToken.data);
+                    await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload`, status, {
+                      headers: { Authorization: newToken },
+                      withCredentials: true
+                    });
+                    getInfo();
+                    setTimeout(() => {
+                      setLoading(false);
+                    }, 2000);
+                    navigate('/berkas');
+                  } catch (error) {
+                    console.error('Error refreshing token or fetching profile:', error);
+                    if (error.response && error.response.status === 400) {
+                      localStorage.removeItem('LP3IPPO:token');
+                    } else {
+                      setErrorPage(true);
+                    }
+                  }
+                } else {
+                  console.error('Error fetching profile:', error);
+                  setErrorPage(true);
+                }
               });
           })
           .catch(() => {
@@ -116,16 +197,49 @@ const Berkas = () => {
               `https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload/${user.id}`, {
               headers: {
                 Authorization: token
-              }
+              },
+              withCredentials: true
             }
             )
-            .then((response) => {
+            .then(() => {
               getInfo();
-              alert(response.data.message);
-              setLoading(false);
+              setTimeout(() => {
+                setLoading(false);
+              }, 1000);
             })
-            .catch(() => {
-              setLoading(false);
+            .catch(async (error) => {
+              if (error.response && error.response.status === 403) {
+                try {
+                  const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+                    withCredentials: true,
+                  });
+
+                  const newToken = response.data;
+                  const decodedNewToken = jwtDecode(newToken);
+                  localStorage.setItem('LP3IPPO:token', newToken);
+                  setUser(decodedNewToken.data);
+
+                  await axios.delete(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload/${user.id}`, {
+                    headers: { Authorization: newToken },
+                    withCredentials: true
+                  });
+                  getInfo();
+                  setTimeout(() => {
+                    setLoading(false);
+                  }, 2000);
+                  navigate('/berkas');
+                } catch (error) {
+                  console.error('Error refreshing token or fetching profile:', error);
+                  if (error.response && error.response.status === 400) {
+                    localStorage.removeItem('LP3IPPO:token');
+                  } else {
+                    setErrorPage(true);
+                  }
+                }
+              } else {
+                console.error('Error fetching profile:', error);
+                setErrorPage(true);
+              }
             });
         })
         .catch(() => {
@@ -134,22 +248,10 @@ const Berkas = () => {
     }
   };
 
-
   useEffect(() => {
-    checkTokenExpiration()
-      .then((response) => {
-        if (response.forbidden) {
-          return navigate('/login');
-        }
-        setUser(response.data.data);
-        getInfo();
-      })
-      .catch((error) => {
-        if (error.forbidden) {
-          return navigate('/login');
-        }
-      })
+    getInfo();
   }, []);
+
   return (
     errorPage ? (
       <ServerError />
@@ -157,7 +259,7 @@ const Berkas = () => {
       loading ? (
         <LoadingScreen />
       ) : (
-        <main className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 py-10 px-5 h-screen'>
+        <main className='flex flex-col items-center justify-center bg-gradient-to-b from-lp3i-400 via-lp3i-200 to-lp3i-400 py-10 px-5 md:h-screen'>
           <div className='max-w-5xl w-full mx-auto shadow-xl'>
             <header className='grid grid-cols-1 md:grid-cols-3 items-center gap-5 bg-lp3i-500 px-10 py-6 rounded-t-2xl'>
               <Link to={'/dashboard'} className='text-white hover:text-gray-200 text-center md:text-left text-sm space-x-2'>
