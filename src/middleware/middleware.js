@@ -15,7 +15,7 @@ const checkTokenExpiration = () => {
     const decoded = jwtDecode(token);
     const expirationTimeMillis = decoded.exp * 1000;
     if (now >= expirationTimeMillis) {
-      localStorage.removeItem('token');
+      localStorage.removeItem('LP3IPPO:token');
       resolve({
         forbidden: true,
         message: 'Token kadaluwarsa',
