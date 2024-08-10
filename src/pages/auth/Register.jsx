@@ -175,7 +175,7 @@ const Register = () => {
       try {
         const profileData = await fetchProfile(token);
         if (profileData) {
-          navigate('/home');
+          navigate('/dashboard');
         }
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
@@ -188,7 +188,7 @@ const Register = () => {
             localStorage.setItem('LP3ITGB:token', newToken);
             const newProfileData = await fetchProfile(newToken);
             if (newProfileData) {
-              navigate('/home');
+              navigate('/dashboard');
             }
           } catch (error) {
             console.error('Error refreshing token or fetching profile:', error);

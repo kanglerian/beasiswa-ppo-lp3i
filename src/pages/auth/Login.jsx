@@ -55,7 +55,7 @@ const Login = () => {
     try {
       const token = localStorage.getItem('LP3ITGB:token');
       if (!token) {
-        return navigate('/');
+        return navigate('/login');
       }
 
       const fetchProfile = async (token) => {
@@ -69,7 +69,7 @@ const Login = () => {
       try {
         const profileData = await fetchProfile(token);
         if (profileData) {
-          navigate('/home');
+          navigate('/dashboard');
         }
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
@@ -82,7 +82,7 @@ const Login = () => {
             localStorage.setItem('LP3ITGB:token', newToken);
             const newProfileData = await fetchProfile(newToken);
             if (newProfileData) {
-              navigate('/home');
+              navigate('/dashboard');
             }
           } catch (error) {
             console.error('Error refreshing token or fetching profile:', error);
@@ -99,7 +99,7 @@ const Login = () => {
       if (error.response) {
         if ([400, 403].includes(error.response.status)) {
           localStorage.removeItem('LP3ITGB:token');
-          navigate('/');
+          navigate('/login');
         } else {
           console.error('Unexpected HTTP error:', error);
           setErrorPage(true);
@@ -111,7 +111,7 @@ const Login = () => {
         console.error('Error:', error);
         setErrorPage(true);
       }
-      navigate('/');
+      navigate('/login');
     } finally {
       setTimeout(() => {
         setLoading(false);
