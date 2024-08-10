@@ -24,7 +24,7 @@ const Berkas = () => {
     try {
       const token = localStorage.getItem('LP3IPPO:token');
       if (!token) {
-        throw new Error('Token tidak ditemukan');
+        return navigate('/');
       }
       const decoded = jwtDecode(token);
       setUser(decoded.data);
@@ -45,7 +45,7 @@ const Berkas = () => {
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
               withCredentials: true,
             });
             const newToken = response.data;
@@ -129,7 +129,7 @@ const Berkas = () => {
               .catch(async (error) => {
                 if (error.response && error.response.status === 403) {
                   try {
-                    const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+                    const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
                       withCredentials: true,
                     });
 
@@ -210,7 +210,7 @@ const Berkas = () => {
             .catch(async (error) => {
               if (error.response && error.response.status === 403) {
                 try {
-                  const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+                  const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
                     withCredentials: true,
                   });
 

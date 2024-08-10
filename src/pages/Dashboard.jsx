@@ -57,7 +57,7 @@ const Dashboard = () => {
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
               withCredentials: true,
             });
 
@@ -109,31 +109,54 @@ const Dashboard = () => {
   };
 
   const logoutHandle = async () => {
-    if (window.confirm('Apakah Anda yakin akan keluar?')) {
-      const token = localStorage.getItem('LP3IPPO:token');
-
-      if (!token) {
-        console.log('Token tidak ditemukan saat logout');
-        navigate('/login');
-        return;
-      }
-
+    const confirmed = confirm('Apakah anda yakin akan keluar?');
+    if (confirmed) {
       try {
-        await axios.delete('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/logout', {
-          headers: { Authorization: token },
-          withCredentials: true,
-        });
-
-        localStorage.removeItem('LP3IPPO:token');
-        navigate('/login');
-      } catch (error) {
-        const status = error.response?.status;
-
-        if (status === 401 || status === 500) {
-          localStorage.removeItem('LP3IPPO:token');
+        const token = localStorage.getItem('LP3IPPO:token');
+        if (!token) {
+          console.log('Token tidak ditemukan saat logout');
           navigate('/login');
+          return;
+        }
+        const responseData = await axios.delete('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/logout/v1', {
+          headers: {
+            Authorization: token
+          }
+        });
+        if (responseData) {
+          alert(responseData.data.message);
+          localStorage.removeItem('LP3IPPO:token');
+          navigate('/login')
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 403) {
+          try {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
+              withCredentials: true,
+            });
+
+            const newToken = response.data;
+            const responseData = await axios.delete('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/logout/v1', {
+              headers: {
+                Authorization: newToken
+              }
+            });
+            if (responseData) {
+              alert(responseData.data.message);
+              localStorage.removeItem('LP3IPPO:token');
+              navigate('/login')
+            }
+          } catch (error) {
+            console.error('Error refreshing token or fetching profile:', error);
+            if (error.response && error.response.status === 400) {
+              localStorage.removeItem('LP3IPPO:token');
+            }
+            if (error.response && error.response.status === 401) {
+              localStorage.removeItem('LP3IPPO:token');
+            }
+          }
         } else {
-          console.error('Logout error:', error);
+          console.error('Error fetching profile:', error);
           setErrorPage(true);
         }
       }

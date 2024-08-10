@@ -117,7 +117,7 @@ const Pribadi = () => {
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
               withCredentials: true,
             });
             const newToken = response.data;
@@ -289,7 +289,7 @@ const Pribadi = () => {
       .catch(async (error) => {
         if (error.response && error.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token', {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
               withCredentials: true,
             });
 
