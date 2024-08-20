@@ -53,7 +53,7 @@ const Login = () => {
 
   const getInfo = async () => {
     try {
-      const token = localStorage.getItem('LP3ITGB:token');
+      const token = localStorage.getItem('LP3IPPO:token');
       if (!token) {
         return navigate('/login');
       }
@@ -74,12 +74,12 @@ const Login = () => {
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v2', {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
               withCredentials: true,
             });
 
             const newToken = response.data;
-            localStorage.setItem('LP3ITGB:token', newToken);
+            localStorage.setItem('LP3IPPO:token', newToken);
             const newProfileData = await fetchProfile(newToken);
             if (newProfileData) {
               navigate('/dashboard');
@@ -87,7 +87,7 @@ const Login = () => {
           } catch (error) {
             console.error('Error refreshing token or fetching profile:', error);
             if (error.response && error.response.status === 400) {
-              localStorage.removeItem('LP3ITGB:token');
+              localStorage.removeItem('LP3IPPO:token');
             }
           }
         } else {
@@ -98,7 +98,7 @@ const Login = () => {
     } catch (error) {
       if (error.response) {
         if ([400, 403].includes(error.response.status)) {
-          localStorage.removeItem('LP3ITGB:token');
+          localStorage.removeItem('LP3IPPO:token');
           navigate('/login');
         } else {
           console.error('Unexpected HTTP error:', error);

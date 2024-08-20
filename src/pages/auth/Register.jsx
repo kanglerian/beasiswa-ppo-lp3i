@@ -180,12 +180,12 @@ const Register = () => {
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v2', {
+            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
               withCredentials: true,
             });
 
             const newToken = response.data;
-            localStorage.setItem('LP3ITGB:token', newToken);
+            localStorage.setItem('LP3IPPO:token', newToken);
             const newProfileData = await fetchProfile(newToken);
             if (newProfileData) {
               navigate('/dashboard');
@@ -204,7 +204,7 @@ const Register = () => {
     } catch (error) {
       if (error.response) {
         if ([400, 403].includes(error.response.status)) {
-          localStorage.removeItem('LP3ITGB:token');
+          localStorage.removeItem('LP3IPPO:token');
           navigate('/');
         } else {
           console.error('Unexpected HTTP error:', error);
