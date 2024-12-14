@@ -29,7 +29,7 @@ const Berkas = () => {
       const decoded = jwtDecode(token);
       setUser(decoded.data);
       const fetchProfile = async (token) => {
-        const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
+        const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/profiles/v1', {
           headers: { Authorization: token },
           withCredentials: true,
         });
@@ -45,7 +45,7 @@ const Berkas = () => {
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
+            const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/auth/token/v1', {
               withCredentials: true,
             });
             const newToken = response.data;
@@ -114,9 +114,13 @@ const Berkas = () => {
           typefile: targetFile.name.split(".").pop(),
         };
         const token = localStorage.getItem('LP3IPPO:token');
-        await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmbonline/upload`, data)
+        await axios.post(`https://uploadhub.politekniklp3i-tasikmalaya.ac.id/upload`, data,{
+          headers: {
+            'lp3i-api-key': 'cdbdb5ea29b98565'
+          }
+        })
           .then(async () => {
-            await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload`, status, {
+            await axios.post(`https://pmb-api.politekniklp3i-tasikmalaya.ac.id/userupload`, status, {
               headers: { Authorization: token },
               withCredentials: true
             }
@@ -129,7 +133,7 @@ const Berkas = () => {
               .catch(async (error) => {
                 if (error.response && error.response.status === 403) {
                   try {
-                    const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
+                    const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/auth/token/v1', {
                       withCredentials: true,
                     });
 
@@ -137,7 +141,7 @@ const Berkas = () => {
                     const decodedNewToken = jwtDecode(newToken);
                     localStorage.setItem('LP3IPPO:token', newToken);
                     setUser(decodedNewToken.data);
-                    await axios.post(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload`, status, {
+                    await axios.post(`https://pmb-api.politekniklp3i-tasikmalaya.ac.id/userupload`, status, {
                       headers: { Authorization: newToken },
                       withCredentials: true
                     });
@@ -185,16 +189,19 @@ const Berkas = () => {
       setLoading(true);
       await axios
         .delete(
-          `https://api.politekniklp3i-tasikmalaya.ac.id/pmbonline/delete`,
+          `https://uploadhub.politekniklp3i-tasikmalaya.ac.id/delete`,
           {
             params: data,
+            headers: {
+              'lp3i-api-key': 'cdbdb5ea29b98565'
+            }
           }
         )
         .then(async () => {
           setLoading(false);
           await axios
             .delete(
-              `https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload/${user.id}`, {
+              `https://pmb-api.politekniklp3i-tasikmalaya.ac.id/userupload/${user.id}`, {
               headers: {
                 Authorization: token
               },
@@ -210,7 +217,7 @@ const Berkas = () => {
             .catch(async (error) => {
               if (error.response && error.response.status === 403) {
                 try {
-                  const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
+                  const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/auth/token/v1', {
                     withCredentials: true,
                   });
 
@@ -219,7 +226,7 @@ const Berkas = () => {
                   localStorage.setItem('LP3IPPO:token', newToken);
                   setUser(decodedNewToken.data);
 
-                  await axios.delete(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/userupload/${user.id}`, {
+                  await axios.delete(`https://pmb-api.politekniklp3i-tasikmalaya.ac.id/userupload/${user.id}`, {
                     headers: { Authorization: newToken },
                     withCredentials: true
                   });

@@ -62,7 +62,7 @@ const Register = () => {
       } else if (field == 'email') {
         value = email;
       }
-      await axios.post('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/validation', {
+      await axios.post('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/auth/validation', {
         value: value,
         field: field
       })
@@ -117,7 +117,7 @@ const Register = () => {
     if (whatsapp !== '' && email !== '' && name !== '' && information !== '') {
       const confirmed = confirm(`Berikut data yang akan didaftarkan\n------\nNama lengkap: ${name}\nEmail: ${email}\nNo. Whatsapp: ${whatsapp}\n------\nApakah sudah benar?`)
       if (confirmed) {
-        await axios.post('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/register/v1', {
+        await axios.post('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/auth/register/v1', {
           phone: whatsapp,
           email: email,
           name: name,
@@ -148,7 +148,7 @@ const Register = () => {
   }
 
   const getPresenters = async () => {
-    await axios.get(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/presenters`)
+    await axios.get(`https://pmb-api.politekniklp3i-tasikmalaya.ac.id/presenters`)
       .then((response) => {
         setPresenters(response.data)
       })
@@ -165,7 +165,7 @@ const Register = () => {
       }
 
       const fetchProfile = async (token) => {
-        const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
+        const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/profiles/v1', {
           headers: { Authorization: token },
           withCredentials: true,
         });
@@ -180,7 +180,7 @@ const Register = () => {
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
+            const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/auth/token/v1', {
               withCredentials: true,
             });
 

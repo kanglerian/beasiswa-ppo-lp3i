@@ -41,7 +41,7 @@ const Prodi = () => {
       setUser(decoded.data);
 
       const fetchProfile = async (token) => {
-        const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/profiles/v1', {
+        const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/profiles/v1', {
           headers: { Authorization: token },
           withCredentials: true,
         });
@@ -60,7 +60,7 @@ const Prodi = () => {
       } catch (profileError) {
         if (profileError.response && profileError.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
+            const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/auth/token/v1', {
               withCredentials: true,
             });
 
@@ -128,7 +128,7 @@ const Prodi = () => {
       programSecond: [],
     });
     const token = localStorage.getItem('LP3IPPO:token');
-    await axios.patch(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/applicants/updateprodi/v1/${user.identity}`, formData, {
+    await axios.patch(`https://pmb-api.politekniklp3i-tasikmalaya.ac.id/applicants/updateprodi/v1/${user.identity}`, formData, {
       headers: {
         Authorization: token
       },
@@ -145,7 +145,7 @@ const Prodi = () => {
       .catch(async (error) => {
         if (error.response && error.response.status === 403) {
           try {
-            const response = await axios.get('https://api.politekniklp3i-tasikmalaya.ac.id/pmb/auth/token/v1', {
+            const response = await axios.get('https://pmb-api.politekniklp3i-tasikmalaya.ac.id/auth/token/v1', {
               withCredentials: true,
             });
 
@@ -154,7 +154,7 @@ const Prodi = () => {
             localStorage.setItem('LP3IPPO:token', newToken);
             setUser(decodedNewToken.data);
 
-            const responseData = await axios.patch(`https://api.politekniklp3i-tasikmalaya.ac.id/pmb/applicants/updateprodi/v1/${user.identity}`, formData, {
+            const responseData = await axios.patch(`https://pmb-api.politekniklp3i-tasikmalaya.ac.id/applicants/updateprodi/v1/${user.identity}`, formData, {
               headers: {
                 Authorization: newToken
               },
@@ -236,18 +236,22 @@ const Prodi = () => {
 
   const getPrograms = async () => {
     await axios
-      .get(`https://api.politekniklp3i-tasikmalaya.ac.id/dashboard/programs`)
-      .then((res) => {
-        const programsData = res.data;
+      .get(`https://endpoint.politekniklp3i-tasikmalaya.ac.id/programs`,{
+        headers: {
+          'lp3i-api-key': 'b35e0a901904d293'
+        }
+      })
+      .then((response) => {
+        const programsData = response.data;
         const results = programsData.filter((program) => program.type === "R" && (program.campus == 'Kampus Tasikmalaya' || program.campus == 'LP3I Tasikmalaya'));
         setPrograms(results);
       })
-      .catch((err) => {
-        let networkError = err.message == "Network Error";
+      .catch((error) => {
+        let networkError = error.message == "Network Error";
         if (networkError) {
           alert("Mohon maaf, data program studi tidak bisa muncul. Periksa server.");
         } else {
-          console.log(err.message);
+          console.log(error.message);
         }
       });
   };
