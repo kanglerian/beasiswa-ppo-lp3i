@@ -284,7 +284,7 @@ const Register = () => {
                       <p className="mt-2 text-xs text-red-500">
                         <span className="font-medium">No. Whatsapp </span>
                         <span>sudah digunakan. Apakah anda </span>
-                        <a href="https://wa.me?phone=6282219509698&text=Kirim%20pesan%20perintah%20ini%20untuk%20reset%20password%20:resetpass:" target='_blank' className='underline'>lupa kata sandi?</a>
+                        <a href="https://wa.me?phone=6281286501015&text=Kirim%20pesan%20perintah%20ini%20untuk%20reset%20password%20:resetpass:" target='_blank' className='underline'>lupa kata sandi?</a>
                       </p>
                     ) : null
                   }

@@ -158,7 +158,7 @@ const Login = () => {
                   </div>
                   <p className="ml-2 mt-2 text-xs text-gray-700">
                     <span>Apakah anda </span>
-                    <a href="https://wa.me?phone=6282219509698&text=Kirim%20pesan%20perintah%20ini%20untuk%20reset%20password%20:resetpass:" target='_blank' className='underline font-medium'>lupa kata sandi?</a>
+                    <a href="https://wa.me?phone=6281286501015&text=Kirim%20pesan%20perintah%20ini%20untuk%20reset%20password%20:resetpass:" target='_blank' className='underline font-medium'>lupa kata sandi?</a>
                   </p>
                 </div>
               </div>
