@@ -140,7 +140,7 @@ const Login = () => {
               <div className='space-y-4'>
                 <div>
                   <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900">
-                    Email
+                    Emails
                   </label>
                   <div className='flex gap-2'>
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-gray-50 border-2 border-lp3i-100 outline-none text-gray-900 text-sm rounded-xl focus:none block w-full px-4 py-2.5" placeholder="Email" required />
